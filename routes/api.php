@@ -20,3 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsensi']);
     });
 });
+
+Route::get('/waktu-server', function () {
+    return now()->toDateTimeString();
+});

@@ -177,6 +177,17 @@ class AbsensiController extends Controller
         return response()->json($absensi);
     }
 
+    public function getAbsensiByUserId($user_id)
+    {
+        $absensi = Absensi::where('user_id', $user_id)->with('user')->get();
+
+        if ($absensi->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data absensi untuk user ini'], 404);
+        }
+
+        return response()->json($absensi);
+    }
+
     private function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius)
     {
         $earthRadius = 6371000;
