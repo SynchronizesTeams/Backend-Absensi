@@ -48,7 +48,7 @@ class AbsensiController extends Controller
                     'user_id' => $request->user()->id,
                     'tanggal' => $today,
                     'jam_masuk' => $now->format('H:i:s'),
-                    'keterangan_masuk' => $predikat, // default enum
+                    'keterangan_masuk' => 'hadir', // default enum
                     'predikat' => $predikat,
                     'keterangan' => null,
                     'photo_masuk' => $path,
