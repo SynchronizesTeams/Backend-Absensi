@@ -17,5 +17,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/masuk', [AbsensiController::class, 'masuk']);
         Route::post('/pulang', [AbsensiController::class, 'pulang']);
         Route::post('/izin', [AbsensiController::class, 'izin']);
+        Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsensi']);
     });
 });

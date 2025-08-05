@@ -56,16 +56,20 @@ class AbsensiController extends Controller
                     // 'longitude' => $request->longitude,
                 ]);
 
-                return response()->json(['message' => "Absen masuk berhasil: $predikat"]);
+                return response()->json([
+                    'message' => 'Absensi berhasil.',
+                    'data' => $absensi
+                ]);
             }
 
             return response()->json(['message' => 'Anda sudah melakukan absensi hari ini']);
         }
 
         return response()->json([
-            'message' => 'Absensi berhasil.',
-            'data' => $absensi
-        ]);
+            'message' => 'Waktu tidak valid untuk absen masuk. Pastikan Anda melakukan absen sebelum jam 13:00.',
+            'current_time' => $currentTime,
+            'allowed_until' => '12:59'
+        ])->setStatusCode(403, 'Forbidden');
     }
 
     public function pulang(Request $request)
