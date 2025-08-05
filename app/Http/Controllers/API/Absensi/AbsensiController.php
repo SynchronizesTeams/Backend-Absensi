@@ -29,8 +29,8 @@ class AbsensiController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $schoolLat = -6.200000;
-        $schoolLng = 106.816666;
+        $schoolLat = -6.467017;
+        $schoolLng = 106.864356;
         $radius = 100;
 
         if (!$this->isWithinRadius($request->latitude, $request->longitude, $schoolLat, $schoolLng, $radius)) {
@@ -85,8 +85,8 @@ class AbsensiController extends Controller
                 'longitude' => 'required|numeric',
             ]);
 
-            $schoolLat = -6.200000;
-            $schoolLng = 106.816666;
+            $schoolLat = -6.467017;
+            $schoolLng = 106.864356;
             $radius = 100;
 
             if (!$this->isWithinRadius($request->latitude, $request->longitude, $schoolLat, $schoolLng, $radius)) {
@@ -154,6 +154,24 @@ class AbsensiController extends Controller
 
     }
 
+    public function seeAbsensi($tanggal)
+    {
+        $absensi = Absensi::whereDate('tanggal', '=',$tanggal)->with('user')->select(
+            'user_id',
+            'tanggal',
+            'jam_masuk',
+            'jam_pulang',
+            'keterangan_masuk',
+            'keterangan_pulang',
+            'keterangan'
+        )->get();
+
+        if ($absensi->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data absensi untuk tanggal tersebut'], 404);
+        }
+
+        return response()->json($absensi);
+    }
 
     private function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius)
     {
