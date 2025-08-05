@@ -45,7 +45,7 @@ class AbsensiController extends Controller
                 $predikat = ($currentTime <= '07:15') ? 'Tepat Waktu' : 'Telat';
 
                 $absen = Absensi::create([
-                    'user_id' => $request->user()->id,
+                    'user_id' => $user->user_id,
                     'tanggal' => $today,
                     'jam_masuk' => $now->format('H:i:s'),
                     'keterangan_masuk' => 'hadir', // default enum
@@ -131,14 +131,14 @@ class AbsensiController extends Controller
         $request->validate([
             'keterangan' => 'required|string',
         ]);
-        
+
         $absensi = Absensi::where('user_id', $user->id)
         ->whereDate('tanggal', $today)
         ->first();
 
         if (!$absensi) {
             Absensi::create([
-                'user_id' => $user->id,
+                'user_id' => $user->user_id,
                 'tanggal' => $today,
                 'jam_masuk' => null,
                 'jam_pulang' => null,

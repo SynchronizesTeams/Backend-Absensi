@@ -28,6 +28,11 @@ class User extends Authenticatable
         'no_telpon'
     ];
 
+    public function absensi()
+    {
+        return $this->hasMany(Absensi::class, 'user_id', 'user_id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
