@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('user_id');
             $table->string('photo_masuk')->nullable();
             $table->string('photo_keluar')->nullable();
+            $table->string('photo_izin')->nullable();
             // $table->decimal('latitude', 10, 8)->nullable();
             // $table->decimal('longitude', 11, 8)->nullable();
             $table->date('tanggal');

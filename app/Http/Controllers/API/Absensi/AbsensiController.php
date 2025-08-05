@@ -134,12 +134,13 @@ class AbsensiController extends Controller
         $today = $now->toDateString();
         $request->validate([
             'keterangan' => 'required|string',
+            'photo_izin' => 'required|image',
         ]);
 
         $absensi = Absensi::where('user_id', $user->user_id)
         ->whereDate('tanggal', $today)
         ->first();
-
+        $path = $request->file('photo_izin')->store('absensi', 'public');
         if (!$absensi) {
             Absensi::create([
                 'user_id' => $user->user_id,
@@ -148,6 +149,7 @@ class AbsensiController extends Controller
                 'jam_pulang' => null,
                 'keterangan_masuk' => 'izin',
                 'keterangan_pulang' => null,
+                'photo' => $path,
                 'keterangan' => $request->keterangan,
             ]);
 

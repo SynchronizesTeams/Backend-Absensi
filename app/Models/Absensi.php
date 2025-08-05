@@ -10,6 +10,7 @@ class Absensi extends Model
         'user_id',
         'photo_masuk',
         'photo_keluar',
+        'photo_izin',
         'latitude',
         'longitude',
         'tanggal',
