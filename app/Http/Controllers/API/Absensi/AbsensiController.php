@@ -48,7 +48,7 @@ class AbsensiController extends Controller
                     'user_id' => $request->user()->id,
                     'tanggal' => $today,
                     'jam_masuk' => $now->format('H:i:s'),
-                    'keterangan_masuk' => 'hadir', // default enum
+                    'keterangan_masuk' => $predikat, // default enum
                     'predikat' => $predikat,
                     'keterangan' => null,
                     'photo_masuk' => $path,
@@ -59,7 +59,7 @@ class AbsensiController extends Controller
                 return response()->json(['message' => "Absen masuk berhasil: $predikat"]);
             }
 
-            return response()->json(['message' => 'Sudah melakukan absen masuk hari ini']);
+            return response()->json(['message' => 'Anda sudah melakukan absensi hari ini']);
         }
 
         return response()->json([
@@ -122,9 +122,9 @@ class AbsensiController extends Controller
         return response()->json(['message' => 'Waktu tidak valid untuk absen']);
     }
 
-    public function izin(Request $request, $user_id)
+    public function izin(Request $request)
     {
-        $user = User::where('user_id', '=', $user_id)->firstOrFail();
+        $user = auth()->user();
         $now = Carbon::now();
         $currentTime = $now->format('H:i');
         $today = $now->toDateString();
@@ -132,12 +132,12 @@ class AbsensiController extends Controller
             'keterangan' => 'required|string',
         ]);
 
-        $absensi = Absensi::where('user_id', $user_id)
+        $absensi = Absensi::where('user_id', $user->user_id)
             ->whereDate('tanggal', $today)
             ->first();
         if (!$absensi) {
             Absensi::create([
-                'user_id' => $user_id,
+                'user_id' => $user->id,
                 'tanggal' => $today,
                 'jam_masuk' => null,
                 'jam_pulang' => null,
