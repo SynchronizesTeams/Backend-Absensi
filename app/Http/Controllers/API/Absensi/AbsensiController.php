@@ -131,10 +131,11 @@ class AbsensiController extends Controller
         $request->validate([
             'keterangan' => 'required|string',
         ]);
+        
+        $absensi = Absensi::where('user_id', $user->id)
+        ->whereDate('tanggal', $today)
+        ->first();
 
-        $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $today)
-            ->first();
         if (!$absensi) {
             Absensi::create([
                 'user_id' => $user->id,
