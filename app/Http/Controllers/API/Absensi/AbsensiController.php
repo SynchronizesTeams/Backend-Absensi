@@ -58,7 +58,7 @@ class AbsensiController extends Controller
 
                 return response()->json([
                     'message' => 'Absensi berhasil.',
-                    'data' => $absensi
+                    'data' => $absen
                 ]);
             }
 
