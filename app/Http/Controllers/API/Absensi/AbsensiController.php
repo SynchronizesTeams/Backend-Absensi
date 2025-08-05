@@ -132,7 +132,7 @@ class AbsensiController extends Controller
             'keterangan' => 'required|string',
         ]);
 
-        $absensi = Absensi::where('user_id', $user->id)
+        $absensi = Absensi::where('user_id', $user->user_id)
         ->whereDate('tanggal', $today)
         ->first();
 
