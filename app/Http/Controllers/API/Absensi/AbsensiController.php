@@ -24,7 +24,7 @@ class AbsensiController extends Controller
             ->first();
 
         $request->validate([
-            'photo_masuk' => 'required|image',
+            'photo_masuk' => 'required|image|max:10240',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
@@ -84,7 +84,7 @@ class AbsensiController extends Controller
             ->first();
 
             $request->validate([
-                'photo_pulang' => 'required|image',
+                'photo_pulang' => 'required|image|max:10240',
                 'latitude' => 'required|numeric',
                 'longitude' => 'required|numeric',
             ]);
@@ -134,7 +134,7 @@ class AbsensiController extends Controller
         $today = $now->toDateString();
         $request->validate([
             'keterangan' => 'required|string',
-            'photo_izin' => 'required|image',
+            'photo_izin' => 'required|image|max:10240',
         ]);
 
         $absensi = Absensi::where('user_id', $user->user_id)
@@ -149,7 +149,7 @@ class AbsensiController extends Controller
                 'jam_pulang' => null,
                 'keterangan_masuk' => 'izin',
                 'keterangan_pulang' => null,
-                'photo' => $path,
+                'photo_izin' => $path,
                 'keterangan' => $request->keterangan,
             ]);
 
