@@ -123,6 +123,14 @@ class AbsensiController extends Controller
                 'keterangan_pulang' => $keteranganPulang,
                 'predikat' => $predikat,
             ]);
+
+            $log = Log::create([
+                'user_id' => $user->user_id,
+                'status' => 'pulang',
+                'is_success' => true,
+                'time' => $now->format('H:i:s'),
+            ]);
+
             $absensi->photo_keluar = $path;
             $absensi->save();
 
