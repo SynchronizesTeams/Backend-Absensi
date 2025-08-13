@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('user_id');
             $table->string('status');
             $table->boolean('is_success')->default(true);
-            $table->timestamp('time');
+            $table->time('time');
             $table->timestamps();
         });
     }
