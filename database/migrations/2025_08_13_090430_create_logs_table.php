@@ -18,6 +18,10 @@ return new class extends Migration
             $table->boolean('is_success')->default(true);
             $table->time('time');
             $table->timestamps();
+
+            //FK
+            $table->index('user_id');
+            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
 

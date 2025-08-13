@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
-    public function logUser(Request $request) {
-        
+    public function logUser(Request $request, $user_id)
+    {
+        $log = Log::where
     }
 }

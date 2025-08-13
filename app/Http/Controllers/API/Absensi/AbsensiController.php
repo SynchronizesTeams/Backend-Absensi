@@ -58,7 +58,7 @@ class AbsensiController extends Controller
                 ]);
 
                 $log = Log::create([
-                    'user_id' => $user->id,
+                    'user_id' => $user->user_id,
                     'status' => 'masuk',
                     'is_success' => true,
                     'time' => $now->format('H:i:s'),
