@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Absensi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
+use App\Models\Log;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -56,7 +57,12 @@ class AbsensiController extends Controller
                     // 'longitude' => $request->longitude,
                 ]);
 
-                
+                $log = Log::create([
+                    'user_id' => $user->id,
+                    'status' => 'masuk',
+                    'is_success' => true,
+                    'time' => $now->format('H:i:s'),
+                ]);
 
                 return response()->json([
                     'message' => 'Absensi berhasil.',

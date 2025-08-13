@@ -7,5 +7,7 @@ use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
-    public function
+    public function logUser(Request $request) {
+        
+    }
 }
