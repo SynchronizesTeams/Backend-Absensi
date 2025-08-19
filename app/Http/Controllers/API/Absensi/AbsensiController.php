@@ -186,7 +186,7 @@ class AbsensiController extends Controller
             $path = $request->file('photo_pulang')->store('absensi', 'public');
 
             $absensi->update([
-                'jam_pulang' => $now->format('H:i:s'),
+                'jam_pulang' => $currentTime,
                 'keterangan_pulang' => $keteranganPulang,
                 'predikat' => $predikat,
             ]);
