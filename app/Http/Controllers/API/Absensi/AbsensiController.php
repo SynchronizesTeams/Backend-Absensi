@@ -178,7 +178,7 @@ class AbsensiController extends Controller
             }
 
             if ($absensi->jam_pulang) {
-                return response()->json(['message' => 'Sudah melakukan absen pulang hari ini']);
+                return response()->json(['message' => 'Sudah melakukan absen pulang hari ini'], 403);
             }
 
             $keteranganPulang = ($currentTime >= '18:00') ? 'lembur' : 'normal';
