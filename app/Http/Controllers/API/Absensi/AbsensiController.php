@@ -154,7 +154,7 @@ class AbsensiController extends Controller
         $currentTime = $now->format('H:i');
         $today = $now->toDateString();
 
-        $absensi = Absensi::where('user_id', $user->id)
+        $absensi = Absensi::where('user_id', $user->user_id)
             ->whereDate('tanggal', $today)
             ->first();
 
