@@ -24,7 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsensi']);
             Route::get('/see/{user_id}', [AbsensiController::class, 'getAbsensiByUserId']);
         });
-
+        Route::prefix('/admin')->group(function () {
+            Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');
+        });
         Route::prefix('/log')->group(function () {
             Route::get('/user/{user_id}', [LogController::class, 'logUser']);
         });
@@ -40,9 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-Route::prefix('/admin')->group(function () {
-    Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');
-});
+
 Route::get('/waktu-server', function () {
     return now()->toDateTimeString();
 });

@@ -213,7 +213,6 @@ class AbsensiController extends Controller
         $currentTime = $now->format('H:i');
         $today = $now->toDateString();
         $request->validate([
-            'keterangan_masuk' => 'required|string',
             'keterangan' => 'required|string',
             'photo_izin' => 'required|image|max:10240',
         ]);
@@ -228,7 +227,7 @@ class AbsensiController extends Controller
                 'tanggal' => $today,
                 'jam_masuk' => null,
                 'jam_pulang' => null,
-                'keterangan_masuk' => $request->keterangan_masuk,
+                'keterangan_masuk' => "izin",
                 'keterangan_pulang' => null,
                 'photo_izin' => $path,
                 'keterangan' => $request->keterangan,
