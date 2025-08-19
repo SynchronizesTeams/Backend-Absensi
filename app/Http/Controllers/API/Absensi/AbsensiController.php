@@ -248,6 +248,8 @@ class AbsensiController extends Controller
         $absensi = Absensi::whereDate('tanggal', '=',$tanggal)->with('user')->select(
             'user_id',
             'tanggal',
+            'photo_masuk',
+            'photo_keluar',
             'jam_masuk',
             'jam_pulang',
             'keterangan_masuk',
