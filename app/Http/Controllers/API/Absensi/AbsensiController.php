@@ -98,7 +98,7 @@ class AbsensiController extends Controller
         ]);
 
         // ✅ Cek apakah sudah absen hari ini
-        $alreadyAbsensi = Absensi::where('user_id', $user->id)
+        $alreadyAbsensi = Absensi::where('user_id', $user->user_id)
             ->whereDate('tanggal', $today)
             ->exists();
 
