@@ -41,6 +41,9 @@ class AbsensiController extends Controller
 
         $path = $request->file('photo_masuk')->store('absensi', 'public');
 
+        if ($absensi) {
+            return response()->json(['message' => 'Anda sudah melakukan absensi hari ini']);
+        }
         if ($currentTime < '12:59') {
             if (!$absensi) {
                 // Penentuan predikat
