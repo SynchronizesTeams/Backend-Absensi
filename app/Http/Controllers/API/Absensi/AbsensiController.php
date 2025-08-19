@@ -103,7 +103,7 @@ class AbsensiController extends Controller
             ->exists();
 
         if ($alreadyAbsensi) {
-            return response()->json(['message' => 'Anda sudah melakukan absensi hari ini']);
+            return response()->json(['message' => 'Anda sudah melakukan absensi hari ini'], 403);
         }
 
         // ✅ Cek lokasi
