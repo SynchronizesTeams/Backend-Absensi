@@ -135,6 +135,13 @@ class AbsensiController extends Controller
             'keterangan' => $predikat,
         ]);
 
+        Log::create([
+            'user_id' => $user->user_id,
+            'status' => 'masuk',
+            'is_success' => true,
+            'time' => $now->format('H:i:s'),
+        ]);
+
         // ✅ Kirim job ke queue untuk simpan file + logging
         $tempPath = $request->file('photo_masuk')->store('temp');
 
