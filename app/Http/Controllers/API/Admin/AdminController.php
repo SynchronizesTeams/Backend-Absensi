@@ -24,5 +24,6 @@ class AdminController extends Controller
             $filename .= ".xlsx";
         }
 
-        return Excel::download(new AbsensiExport($from, $to), $filename);    }
+        return Excel::download(new AbsensiExport($from, $to), $filename);
+    }
 }
