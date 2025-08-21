@@ -10,7 +10,7 @@ class LogController extends Controller
 {
     public function logUser(Request $request, $user_id)
     {
-        $log = Log::where('user_id', $user_id)
+        $log = Log::where('user_id', '=',$user_id)
             ->orderBy('created_at', 'desc')
             ->get();
 
