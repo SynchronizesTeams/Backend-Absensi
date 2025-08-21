@@ -205,8 +205,7 @@ class AbsensiController extends Controller
                 'time' => $now->format('H:i:s'),
             ]);
 
-            $absensi->photo_keluar = $path;
-            $absensi->save();
+            SaveAbsensiPulangJob::dispatch($path, $absensi->id, $user->id, $now);
 
             return response()->json([
                 'message' => "Absen pulang berhasil" . ($predikat ? " ($predikat)" : ""),
