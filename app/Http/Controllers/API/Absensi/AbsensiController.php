@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Absensi;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SaveAbsensiMasukJob;
+use App\Jobs\SaveAbsensiPulangJob;
 use App\Models\Absensi;
 use App\Models\Log;
 use App\Models\User;
@@ -212,7 +213,7 @@ class AbsensiController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Waktu tidak valid untuk absen']);
+        return response()->json(['message' => 'Waktu tidak valid untuk absen'], 403);
     }
 
     public function izin(Request $request)
