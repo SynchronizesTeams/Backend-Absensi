@@ -29,7 +29,7 @@ class AdminController extends Controller
         return Excel::download(new AbsensiExport($from, $to), $filename);
     }
 
-    public function userCount()
+    public function CountUser()
     {
         return Cache::remember('user_count', now()->addHours(1), function () {
             return response()->json([
@@ -38,7 +38,7 @@ class AdminController extends Controller
         });
     }
 
-    public function userFilter($role)
+    public function countUsersByRole($role)
     {
         return Cache::remember("user_count_by_role_{$role}", now()->addHours(1), function () use ($role) {
             $users = User::where('role', '=', $role)->count();

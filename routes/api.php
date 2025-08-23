@@ -26,6 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         Route::prefix('/admin')->group(function () {
             Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');
+            Route::get('/count-user', [AdminController::class, 'CountUser']);
+            Route::get('/count-users-by-role/{role}', [AdminController::class, 'countUs`ersByRole']);
         });
         Route::prefix('/log')->group(function () {
             Route::get('/user/{user_id}', [LogController::class, 'logUser']);

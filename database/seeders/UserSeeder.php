@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $path = database_path('seeders/data/trabsen.csv');
+        $path = database_path('seeders/data/trabsen-2.csv');
 
         if (!file_exists($path) || !is_readable($path)) {
             return;
