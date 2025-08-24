@@ -10,6 +10,7 @@ use App\Models\Log;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Symfony\Contracts\Service\Attribute\Required;
 
 class AbsensiController extends Controller
@@ -304,6 +305,20 @@ class AbsensiController extends Controller
             'tahun' => $tahun,
             'rekap' => $rekap
         ]);
+    }
+
+    public function cekAbsenMasuk($user_id)
+    {
+        $absensi = Absensi::where('user_id', $user_id)
+            ->whereDate('tanggal', Carbon::now()->toDateString())
+            ->where('keterangan_masuk', '=','hadir')
+            ->first();
+
+        if ($absensi) {
+            return response()->json(['message' => 'Anda sudah melakukan absen masuk hari ini']);
+        }
+
+        return response()->json(['message' => 'Anda belum melakukan absen masuk hari ini']);
     }
 
     private function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius)
