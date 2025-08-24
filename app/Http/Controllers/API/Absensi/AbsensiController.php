@@ -127,6 +127,7 @@ class AbsensiController extends Controller
 
         // ✅ Predikat cepat
         $predikat = ($currentTime <= '07:15') ? 'Tepat Waktu' : 'Telat';
+        $path = $request->file('photo_masuk')->store('absensi', 'public');
 
         // ✅ Simpan data absensi minimal (tanpa file dulu, biar cepat)
         $absen = Absensi::create([
@@ -135,6 +136,7 @@ class AbsensiController extends Controller
             'jam_masuk' => $now->format('H:i:s'),
             'keterangan_masuk' => 'hadir',
             'keterangan' => $predikat,
+            'photo_masuk' => $path,
         ]);
 
         Log::create([
@@ -144,12 +146,13 @@ class AbsensiController extends Controller
             'time' => $now->format('H:i:s'),
         ]);
 
-        // ✅ Kirim job ke queue untuk simpan file + logging
-        $tempPath = $request->file('photo_masuk')->store('temp');
 
-        // Dispatch job dengan path, bukan object UploadedFile
-        SaveAbsensiMasukJob::dispatch($tempPath, $absen->id, $user->id, $now);
-
+        // SaveAbsensiMasukJob::dispatch(
+        //     $tempPath,
+        //     $absen->id,
+        //     $user->user_id,
+        //     $now->toDateTimeString() // jangan kirim object Carbon
+        // );
         return response()->json([
             'message' => 'Absensi berhasil. Data sedang diproses di background.',
             'data' => $absen
@@ -165,25 +168,26 @@ class AbsensiController extends Controller
 
         $absensi = Absensi::where('user_id', $user->user_id)
             ->whereDate('tanggal', $today)
-            ->first();
+            ->first(); // pakai first(), bukan exists()
 
-            $request->validate([
-                'photo_pulang' => 'required|image|max:10240',
-                'latitude' => 'required|numeric',
-                'longitude' => 'required|numeric',
-            ]);
+        $request->validate([
+            'photo_pulang' => 'required|image|max:10240',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
 
-            $schoolLat = -6.467017;
-            $schoolLng = 106.864356;
-            $radius = 100;
+        $schoolLat = -6.467017;
+        $schoolLng = 106.864356;
+        $radius = 100;
 
-            if (!$this->isWithinRadius($request->latitude, $request->longitude, $schoolLat, $schoolLng, $radius)) {
-                return response()->json(['message' => 'Lokasi Anda di luar area yang diperbolehkan.'], 403);
-            }
+        if (!$this->isWithinRadius($request->latitude, $request->longitude, $schoolLat, $schoolLng, $radius)) {
+            return response()->json(['message' => 'Lokasi Anda di luar area yang diperbolehkan.'], 403);
+        }
+
         // Jam pulang
         if ($currentTime >= '13:00' && $currentTime <= '23:59') {
             if (!$absensi) {
-                return response()->json(['message' => 'Belum melakukan absen masuk, tidak bisa absen pulang']);
+                return response()->json(['message' => 'Belum melakukan absen masuk, tidak bisa absen pulang'], 403);
             }
 
             if ($absensi->jam_pulang) {
@@ -196,18 +200,16 @@ class AbsensiController extends Controller
 
             $absensi->update([
                 'jam_pulang' => $currentTime,
+                'photo_pulang' => $path, // jangan lupa simpan path fotonya
                 'keterangan_pulang' => $keteranganPulang,
-                'predikat' => $predikat,
             ]);
 
-            $log = Log::create([
+            Log::create([
                 'user_id' => $user->user_id,
                 'status' => 'pulang',
                 'is_success' => true,
                 'time' => $now->format('H:i:s'),
             ]);
-
-            SaveAbsensiPulangJob::dispatch($path, $absensi->id, $user->id, $now);
 
             return response()->json([
                 'message' => "Absen pulang berhasil" . ($predikat ? " ($predikat)" : ""),
@@ -318,7 +320,21 @@ class AbsensiController extends Controller
             return response()->json(['message' => 'Anda sudah melakukan absen masuk hari ini']);
         }
 
-        return response()->json(['message' => 'Anda belum melakukan absen masuk hari ini']);
+        return response()->json(['message' => 'Anda belum melakukan absen masuk hari ini'], 401);
+    }
+
+    public function cekAbsenPulang($user_id)
+    {
+        $absensi = Absensi::where('user_id', $user_id)
+                    ->whereDate('tanggal', Carbon::now()->toDateString())
+                    ->whereIn('keterangan_pulang', ['normal', 'lembur'])
+                    ->first();
+
+        if ($absensi) {
+            return response()->json(['message' => 'Anda sudah melakukan absen pulang hari ini']);
+        }
+
+        return response()->json(['message' => 'Anda belum melakukan absen pulang hari ini'], 401);
     }
 
     private function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius)

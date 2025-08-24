@@ -22,8 +22,8 @@ return new class extends Migration
             $table->date('tanggal');
             $table->time('jam_masuk')->nullable();
             $table->time('jam_pulang')->nullable();
-            $table->enum('keterangan_masuk', ['hadir', 'izin', 'sakit', 'cuti', 'tidak hadir'])->default('hadir')->nullable();
-            $table->enum('keterangan_pulang', ['normal', 'lembur'])->default('normal')->nullable();
+            $table->enum('keterangan_masuk', ['hadir', 'izin', 'sakit', 'cuti', 'tidak hadir'])->nullable();
+            $table->enum('keterangan_pulang', ['normal', 'lembur'])->nullable();
             $table->string('keterangan')->nullable();
             $table->timestamps();
 

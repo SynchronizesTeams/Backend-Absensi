@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Absensi;
 use App\Models\Log;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -25,10 +26,10 @@ class SaveAbsensiMasukJob implements ShouldQueue
     protected $time;
     public function __construct($file, $absensiId, $userId, $time)
     {
-        $this->file = $file;
+        $this->file = $file; // misalnya: temp/abc123.jpg
         $this->absensiId = $absensiId;
         $this->userId = $userId;
-        $this->time = $time;
+        $this->time = $time; // simpan sebagai string
     }
 
     /**
@@ -36,20 +37,34 @@ class SaveAbsensiMasukJob implements ShouldQueue
      */
     public function handle(): void
     {
-         // Pindahkan file dari temp ke lokasi final
-    $finalPath = Storage::disk('public')->putFile('absensi', Storage::path($this->filePath));
+        $sourcePath = storage_path('app/' . $this->file);
+        $targetPath = 'absensi/' . basename($this->file);
 
-    // Update absensi
-    Absensi::where('id', $this->absensiId)->update([
-        'photo_masuk' => $finalPath,
-    ]);
+        if (!file_exists($sourcePath)) {
+            Log::create([
+                'user_id' => $this->userId,
+                'status' => 'masuk',
+                'is_success' => false,
+                'time' => Carbon::parse($this->time)->format('H:i:s'),
+            ]);
+            return;
+        }
 
-    // Buat log
-    Log::create([
-        'user_id' => $this->userId,
-        'status' => 'masuk',
-        'is_success' => true,
-        'time' => $this->time->format('H:i:s'),
-    ]);
+        // pindahkan file
+        Storage::disk('public')->put($targetPath, file_get_contents($sourcePath));
+        unlink($sourcePath);
+
+        // update absensi
+        Absensi::where('id', '=',$this->absensiId)->update([
+            'photo_masuk' => $targetPath,
+        ]);
+
+        // log sukses
+        Log::create([
+            'user_id' => $this->userId,
+            'status' => 'masuk',
+            'is_success' => true,
+            'time' => Carbon::parse($this->time)->format('H:i:s'),
+        ]);
     }
 }
