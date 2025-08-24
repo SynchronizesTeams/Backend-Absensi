@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/izin', [AbsensiController::class, 'izin']);
             Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsensi']);
             Route::get('/see/{user_id}', [AbsensiController::class, 'getAbsensiByUserId']);
+            Route::get('/recap/{user_id}', [AbsensiController::class, 'recapAbsensi']);
         });
         Route::prefix('/admin')->group(function () {
             Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');
@@ -31,6 +32,11 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         Route::prefix('/log')->group(function () {
             Route::get('/user/{user_id}', [LogController::class, 'logUser']);
+        });
+        Route::prefix('/user')->group(function () {
+            Route::get('/info/{user_id}', [AuthController::class, 'getUserInfo']);
+            Route::post('/edit/{user_id}', [AuthController::class, 'editUserInfo']);
+            Route::post('/edit-password/{user_id}', [AuthController::class, 'editPassword']);
         });
     });
 

@@ -59,4 +59,65 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function editUserInfo(Request $request, $user_id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $user = User::where('user_id', '=',$user_id)->first();
+
+            $user->update($request->only(['name', 'email', 'no_induk', 'role']));
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'User berhasil diperbarui!',
+                'data' => $user
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memperbarui data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getUserInfo(Request $request, $user_id)
+    {
+        $user = User::where('user_id', '=',$user_id)->first();
+
+        return response()->json([
+            'data' => $user
+        ]);
+    }
+
+    public function editPassword(Request $request, $user_id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $user = User::where('user_id', '=',$user_id)->first();
+
+            $user->update([
+                'password' => bcrypt($request->password)
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Password berhasil diperbarui!',
+                'data' => $user
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memperbarui data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
