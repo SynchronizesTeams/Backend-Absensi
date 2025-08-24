@@ -282,6 +282,30 @@ class AbsensiController extends Controller
         return response()->json($absensi);
     }
 
+    public function recapAbsensi(Request $request, $user_id) {
+        $bulan = $request->input('bulan', Carbon::now()->month);
+        $tahun = $request->input('tahun', Carbon::now()->year);
+
+        $rekap = Absensi::selectRaw("
+                    SUM(CASE WHEN keterangan_masuk = 'hadir' THEN 1 ELSE 0 END) as total_hadir,
+                    SUM(CASE WHEN keterangan_masuk = 'izin' THEN 1 ELSE 0 END) as total_izin,
+                    SUM(CASE WHEN keterangan_masuk = 'sakit' THEN 1 ELSE 0 END) as total_sakit,
+                    SUM(CASE WHEN keterangan_masuk = 'cuti' THEN 1 ELSE 0 END) as total_cuti,
+                    SUM(CASE WHEN keterangan_masuk = 'tidak hadir' THEN 1 ELSE 0 END) as total_tidak_hadir
+                ")
+                ->where('user_id', $user_id)
+                ->whereMonth('tanggal', $bulan)
+                ->whereYear('tanggal', $tahun)
+                ->first();
+
+        return response()->json([
+            'user_id' => $user_id,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'rekap' => $rekap
+        ]);
+    }
+
     private function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius)
     {
         $earthRadius = 6371000;
