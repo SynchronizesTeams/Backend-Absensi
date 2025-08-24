@@ -48,6 +48,8 @@ class AdminController extends Controller
         });
     }
 
+
+
     // public function countUsersByRole($role)
     // {
     //     return Cache::remember("user_count_by_role_{$role}", now()->addHours(1), function () use ($role) {
