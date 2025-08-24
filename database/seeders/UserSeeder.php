@@ -26,7 +26,7 @@ class UserSeeder extends Seeder
                     'name' => $row[0],
                     'no_induk' => $row[1],
                     'email' => $row[2],
-                    'password' => $row[3],
+                    'password' => Hash::make($row[3]),
                     'role' => $row[4],
                     'created_at' => now(),
                     'updated_at' => now(),
