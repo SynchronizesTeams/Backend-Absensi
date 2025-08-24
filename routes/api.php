@@ -24,6 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsensi']);
             Route::get('/see/{user_id}', [AbsensiController::class, 'getAbsensiByUserId']);
             Route::get('/recap/{user_id}', [AbsensiController::class, 'recapAbsensi']);
+
+            Route::get('/cek-masuk/{user_id}', [AbsensiController::class, 'cekAbsenMasuk']);
+            Route::get('/cek-pulang/{user_id}', [AbsensiController::class, 'cekAbsenPulang']);
         });
         Route::prefix('/admin')->group(function () {
             Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');
@@ -37,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/edit/{user_id}', [AuthController::class, 'editUserInfo']);
             Route::post('/edit-password/{user_id}', [AuthController::class, 'editPassword']);
         });
+
     });
 
     Route::prefix('v2')->group(function () {

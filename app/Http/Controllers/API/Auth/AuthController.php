@@ -67,7 +67,7 @@ class AuthController extends Controller
         try {
             $user = User::where('user_id', '=',$user_id)->first();
 
-            $user->update($request->only(['name', 'email', 'no_induk', 'no_telpon']));
+            $user->update($request->only(['name', 'email', 'no_telpon']));
 
             DB::commit();
 

@@ -65,6 +65,7 @@ return [
     |
     */
 
+    // 'timezone' => 'Pacific/Auckland',
     'timezone' => 'Asia/Jakarta',
 
     /*
