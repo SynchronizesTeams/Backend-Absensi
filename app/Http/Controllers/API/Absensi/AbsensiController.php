@@ -200,7 +200,7 @@ class AbsensiController extends Controller
 
             $absensi->update([
                 'jam_pulang' => $currentTime,
-                'photo_pulang' => $path, // jangan lupa simpan path fotonya
+                'photo_keluar' => $path, // jangan lupa simpan path fotonya
                 'keterangan_pulang' => $keteranganPulang,
             ]);
 
