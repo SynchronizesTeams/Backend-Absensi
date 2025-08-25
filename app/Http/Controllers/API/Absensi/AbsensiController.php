@@ -94,7 +94,7 @@ class AbsensiController extends Controller
 
         // ✅ Validasi dulu
         $request->validate([
-            'photo_masuk' => 'required|image|max:10240',
+            'photo_masuk' => 'required|image|max:10240|mimes:png,jpg,jpeg,bmp,gif,svg,webp,tiff,ico,avif',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
