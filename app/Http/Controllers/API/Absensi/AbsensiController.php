@@ -94,7 +94,7 @@ class AbsensiController extends Controller
 
         // ✅ Validasi dulu
         $request->validate([
-            'photo_masuk' => 'required|image|max:10240',
+            'photo_masuk' => 'required|image|max:10240|mimes:png,jpg,jpeg,bmp,gif,svg,tiff,webp',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
@@ -139,7 +139,8 @@ class AbsensiController extends Controller
             'photo_masuk' => $path,
         ]);
 
-        Log::create([
+        Log::create([            if (!$absensi) {
+
             'user_id' => $user->user_id,
             'status' => 'masuk',
             'is_success' => true,
