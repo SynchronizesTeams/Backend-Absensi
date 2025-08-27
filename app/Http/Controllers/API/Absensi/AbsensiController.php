@@ -15,6 +15,7 @@ use Symfony\Contracts\Service\Attribute\Required;
 
 class AbsensiController extends Controller
 {
+
     public function masuk(Request $request)
     {
         $user = auth()->user();
@@ -109,9 +110,7 @@ class AbsensiController extends Controller
         }
 
         // ✅ Cek lokasi
-        $schoolLat = -6.467017;
-        $schoolLng = 106.864356;
-        $radius = 100;
+
         if (!$this->isWithinRadius($request->latitude, $request->longitude, $schoolLat, $schoolLng, $radius)) {
             return response()->json(['message' => 'Lokasi Anda di luar area yang diperbolehkan.'], 403);
         }
@@ -141,6 +140,7 @@ class AbsensiController extends Controller
 
         Log::create([
             'user_id' => $user->user_id,
+            'absensi_id' => $alreadyAbsensi->id,
             'status' => 'masuk',
             'is_success' => true,
             'time' => $now->format('H:i:s'),
@@ -206,6 +206,7 @@ class AbsensiController extends Controller
 
             Log::create([
                 'user_id' => $user->user_id,
+                'absensi_id' => $absensi->id,
                 'status' => 'pulang',
                 'is_success' => true,
                 'time' => $now->format('H:i:s'),

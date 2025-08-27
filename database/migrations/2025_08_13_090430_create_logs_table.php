@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('logs', function (Blueprint $table) {
             $table->id();
             $table->string('user_id');
+            $table->unsignedBigInteger('absensi_id');
             $table->string('status');
             $table->boolean('is_success')->default(true);
             $table->time('time');
@@ -21,7 +22,9 @@ return new class extends Migration
 
             //FK
             $table->index('user_id');
+            $table->index('absensi_id');
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
+            $table->foreign('absensi_id')->references('id')->on('absensis')->onDelete('cascade');
         });
     }
 
