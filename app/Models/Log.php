@@ -8,6 +8,7 @@ class Log extends Model
 {
     protected $fillable = [
         'user_id',
+        'absensi_id',
         'status',
         'is_success',
         'time',
@@ -16,5 +17,10 @@ class Log extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'user_id');
+    }
+
+    public function absensi()
+    {
+        return $this->belongsTo(Absensi::class, 'absensi_id', 'id');
     }
 }
