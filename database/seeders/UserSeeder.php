@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 // Asumsikan urutan kolom: name, email, password
                 DB::table('users')->insert([
-                    'user_id' => uniqid('siswa_'),
+                    'user_id' => uniqid('user_'),
                     'name' => $row[0],
                     'no_induk' => $row[1],
                     'email' => $row[2],
