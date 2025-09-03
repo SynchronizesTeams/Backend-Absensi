@@ -273,6 +273,7 @@ class AbsensiController extends Controller
             'photo_keluar',
             'jam_masuk',
             'jam_pulang',
+            'photo_izin',
             'keterangan_masuk',
             'keterangan_pulang',
             'keterangan'
