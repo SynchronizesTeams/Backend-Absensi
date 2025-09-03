@@ -94,14 +94,12 @@ class AbsensiController extends Controller
         $currentTime = $now->format('H:i');
         $today = $now->toDateString();
 
-        // ✅ Validasi dulu
         $request->validate([
             'photo_masuk' => 'required|image|max:10240|mimes:png,jpg,jpeg,bmp,gif,svg,webp,tiff,ico,avif',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
 
-        // ✅ Cek apakah sudah absen hari ini
         $alreadyAbsensi = Absensi::where('user_id', $user->user_id)
             ->whereDate('tanggal', $today)
             ->exists();
@@ -110,7 +108,6 @@ class AbsensiController extends Controller
             return response()->json(['message' => 'Anda sudah melakukan absensi hari ini'], 403);
         }
 
-        // ✅ Cek lokasi
         $schoolLat = -6.467017;
         $schoolLng = 106.864356;
         $radius = 100;
@@ -118,7 +115,6 @@ class AbsensiController extends Controller
             return response()->json(['message' => 'Lokasi Anda di luar area yang diperbolehkan.'], 403);
         }
 
-        // ✅ Batas waktu
         if ($currentTime >= '13:00') {
             return response()->json([
                 'message' => 'Waktu tidak valid untuk absen masuk. Pastikan Anda melakukan absen sebelum jam 13:00.',
@@ -127,11 +123,9 @@ class AbsensiController extends Controller
             ], 403);
         }
 
-        // ✅ Predikat cepat
         $predikat = ($currentTime <= '07:15') ? 'Tepat Waktu' : 'Telat';
         $path = $request->file('photo_masuk')->store('absensi', 'public');
 
-        // ✅ Simpan data absensi minimal (tanpa file dulu, biar cepat)
         $absen = Absensi::create([
             'user_id' => $user->user_id,
             'tanggal' => $today,
@@ -149,13 +143,9 @@ class AbsensiController extends Controller
             'time' => $now->format('H:i:s'),
         ]);
 
+        $cacheKey = "absensi-{$today}";
+        Cache::forget($cacheKey);
 
-        // SaveAbsensiMasukJob::dispatch(
-        //     $tempPath,
-        //     $absen->id,
-        //     $user->user_id,
-        //     $now->toDateTimeString() // jangan kirim object Carbon
-        // );
         return response()->json([
             'message' => 'Absensi berhasil. Data sedang diproses di background.',
             'data' => $absen
