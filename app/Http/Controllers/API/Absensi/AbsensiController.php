@@ -270,6 +270,7 @@ class AbsensiController extends Controller
             'user_id',
             'tanggal',
             'photo_masuk',
+            'photo_izin',
             'photo_keluar',
             'jam_masuk',
             'jam_pulang',
