@@ -224,34 +224,44 @@ class AbsensiController extends Controller
     {
         $user = auth()->user();
         $now = Carbon::now();
-        $currentTime = $now->format('H:i');
         $today = $now->toDateString();
+
         $request->validate([
             'keterangan' => 'required|string',
             'photo_izin' => 'required|image|max:10240',
         ]);
 
+        // cari absensi user hari ini
         $absensi = Absensi::where('user_id', $user->user_id)
-        ->whereDate('tanggal', $today)
-        ->first();
-        $path = $request->file('photo_izin')->store('absensi', 'public');
-        if (!$absensi) {
-            Absensi::create([
-                'user_id' => $user->user_id,
-                'tanggal' => $today,
-                'jam_masuk' => null,
-                'jam_pulang' => null,
-                'keterangan_masuk' => "izin",
-                'keterangan_pulang' => null,
-                'photo_izin' => $path,
-                'keterangan' => $request->keterangan,
-            ]);
+            ->whereDate('tanggal', $today)
+            ->first();
 
-            return response()->json(['message' => "Absen izin berhasil"]);
-        } else {
-            return response()->json(['message' => 'Sudah melakukan absen hari ini']);
+        // kalau sudah ada absensi hari ini dengan status izin
+        if ($absensi && $absensi->keterangan_masuk == "izin") {
+            return response()->json(['message' => 'Anda sudah melakukan absen izin hari ini'], 400);
         }
 
+        // kalau sudah ada absensi tapi bukan izin (misal masuk kerja)
+        if ($absensi) {
+            return response()->json(['message' => 'Anda sudah melakukan absensi hari ini'], 400);
+        }
+
+        // simpan foto izin
+        $path = $request->file('photo_izin')->store('absensi', 'public');
+
+        // buat absensi baru dengan status izin
+        Absensi::create([
+            'user_id' => $user->user_id,
+            'tanggal' => $today,
+            'jam_masuk' => null,
+            'jam_pulang' => null,
+            'keterangan_masuk' => "izin",
+            'keterangan_pulang' => null,
+            'photo_izin' => $path,
+            'keterangan' => $request->keterangan,
+        ]);
+
+        return response()->json(['message' => "Absen izin berhasil"], 200);
     }
 
     public function seeAbsensi($tanggal)
