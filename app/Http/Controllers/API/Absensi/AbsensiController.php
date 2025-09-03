@@ -10,6 +10,7 @@ use App\Models\Log;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Symfony\Contracts\Service\Attribute\Required;
 
@@ -110,7 +111,9 @@ class AbsensiController extends Controller
         }
 
         // ✅ Cek lokasi
-
+        $schoolLat = -6.467017;
+        $schoolLng = 106.864356;
+        $radius = 100;
         if (!$this->isWithinRadius($request->latitude, $request->longitude, $schoolLat, $schoolLng, $radius)) {
             return response()->json(['message' => 'Lokasi Anda di luar area yang diperbolehkan.'], 403);
         }
@@ -266,18 +269,21 @@ class AbsensiController extends Controller
 
     public function seeAbsensi($tanggal)
     {
-        $absensi = Absensi::whereDate('tanggal', '=',$tanggal)->with('user')->select(
-            'user_id',
-            'tanggal',
-            'photo_masuk',
-            'photo_izin',
-            'photo_keluar',
-            'jam_masuk',
-            'jam_pulang',
-            'keterangan_masuk',
-            'keterangan_pulang',
-            'keterangan'
-        )->get();
+        $cacheKey = "absensi-{$tanggal}";
+        $absensi = Cache::remember($cacheKey, now()->addHours(1), function () use ($tanggal) {
+            return Absensi::whereDate('tanggal', '=',$tanggal)->with('user')->select(
+                'user_id',
+                'tanggal',
+                'photo_masuk',
+                'photo_izin',
+                'photo_keluar',
+                'jam_masuk',
+                'jam_pulang',
+                'keterangan_masuk',
+                'keterangan_pulang',
+                'keterangan'
+            )->get();
+        });
 
         if ($absensi->isEmpty()) {
             return response()->json(['message' => 'Tidak ada data absensi untuk tanggal tersebut'], 404);
