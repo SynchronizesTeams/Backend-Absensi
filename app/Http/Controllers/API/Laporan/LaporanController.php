@@ -9,6 +9,6 @@ class LaporanController extends Controller
 {
     public function index()
     {
-        //biar ada commit brayyyyssssss
+        //biar ada commit brayyyyssssssssssss
     }
 }
