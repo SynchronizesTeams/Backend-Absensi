@@ -137,7 +137,7 @@ class AbsensiController extends Controller
 
         Log::create([
             'user_id' => $user->user_id,
-            'absensi_id' => $alreadyAbsensi->id,
+            'absensi_id' => $absen->id,
             'status' => 'masuk',
             'is_success' => true,
             'time' => $now->format('H:i:s'),
