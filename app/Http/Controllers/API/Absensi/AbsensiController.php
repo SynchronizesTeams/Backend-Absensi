@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Symfony\Contracts\Service\Attribute\Required;
+use Carbon\CarbonPeriod;
 
 class AbsensiController extends Controller
 {
@@ -293,10 +294,15 @@ class AbsensiController extends Controller
         return response()->json($absensi);
     }
 
-    public function recapAbsensi(Request $request, $user_id) {
+    public function recapAbsensi(Request $request, $user_id)
+    {
+
+
+        // Ambil bulan & tahun dari request atau default sekarang
         $bulan = $request->input('bulan', Carbon::now()->month);
         $tahun = $request->input('tahun', Carbon::now()->year);
 
+        // Ambil data rekap kategori (hadir, izin, sakit, cuti, tidak hadir)
         $rekap = Absensi::selectRaw("
                     SUM(CASE WHEN keterangan_masuk = 'hadir' THEN 1 ELSE 0 END) as total_hadir,
                     SUM(CASE WHEN keterangan_masuk = 'izin' THEN 1 ELSE 0 END) as total_izin,
@@ -309,13 +315,53 @@ class AbsensiController extends Controller
                 ->whereYear('tanggal', $tahun)
                 ->first();
 
+        // Hitung total hari kerja dari tanggal 1 sampai hari ini (atau akhir bulan)
+        $now = Carbon::now();
+        $start = Carbon::create($tahun, $bulan, 1);
+        $end = ($bulan == $now->month && $tahun == $now->year)
+            ? $now // kalau bulan ini, cukup sampai hari ini
+            : $start->copy()->endOfMonth();
+
+        $period = CarbonPeriod::create($start, $end);
+
+        // Ambil semua tanggal yang user punya absensi
+        $tanggalAbsensi = Absensi::where('user_id', $user_id)
+            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+            ->pluck('tanggal')
+            ->toArray();
+
+        // Hitung hari kerja (Senin–Sabtu)
+        $hariKerja = collect($period)->reject(fn($date) => $date->isSunday());
+
+        // Tanggal yang belum ada absensi sama sekali
+        $tanggalTidakAbsen = $hariKerja->filter(function ($date) use ($tanggalAbsensi) {
+            return !in_array($date->toDateString(), $tanggalAbsensi);
+        })->map->toDateString()->values();
+
+        $totalTidakAbsen = $tanggalTidakAbsen->count();
+
+        // Tambahkan ke hasil rekap
+        $rekap->total_tidak_absen = $totalTidakAbsen;
+        $rekap->tanggal_tidak_absen = $tanggalTidakAbsen;
+
+        // Hitung total hari kerja dalam periode
+        $rekap->total_hari_kerja = $hariKerja->count();
+
         return response()->json([
             'user_id' => $user_id,
             'bulan' => $bulan,
             'tahun' => $tahun,
-            'rekap' => $rekap
+            'periode' => [
+                'mulai' => $start->toDateString(),
+                'sampai' => $end->toDateString(),
+            ],
+            'rekap' => $rekap,
+            'pesan' => $totalTidakAbsen > 0
+                ? "Anda belum absen sebanyak $totalTidakAbsen hari dalam periode ini."
+                : "Absensi lengkap, pertahankan!"
         ]);
     }
+
 
     public function cekAbsenMasuk($user_id)
     {
