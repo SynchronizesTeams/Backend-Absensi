@@ -33,6 +33,10 @@ class User extends Authenticatable
         return $this->hasMany(Absensi::class, 'user_id', 'user_id');
     }
 
+    public function laporan() {
+        return $this->hasMany(Laporan::class, "user_id", "user_id");
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

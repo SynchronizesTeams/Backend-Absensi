@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\Absensi\AbsensiController;
 use App\Http\Controllers\API\Admin\AdminController;
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\Laporan\LaporanController;
 use App\Http\Controllers\API\Log\LogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('/cek-masuk/{user_id}', [AbsensiController::class, 'cekAbsenMasuk']);
             Route::get('/cek-pulang/{user_id}', [AbsensiController::class, 'cekAbsenPulang']);
+        });
+        Route::prefix("/laporan")->group(function() {
+            Route::post("/create", [LaporanController::class, 'store']);
+            Route::post("/update/{id}", [LaporanController::class, 'update']);
+            Route::get("/show", [LaporanController::class, 'index']);
+            Route::get("/show/{id}", [LaporanController::class, 'show']);
+            Route::get("/show/user/{id}", [LaporanController::class, 'showLaporanByUser']);
+            Route::get("/show/date", [LaporanController::class, 'showDailyLaporan']);
+            Route::delete("/delete/{id}", [LaporanController::class, 'destroy']);
         });
         Route::prefix('/admin')->group(function () {
             Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');

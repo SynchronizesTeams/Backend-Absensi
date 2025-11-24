@@ -17,7 +17,6 @@ use Carbon\CarbonPeriod;
 
 class AbsensiController extends Controller
 {
-
     public function masuk(Request $request)
     {
         $user = auth()->user();
