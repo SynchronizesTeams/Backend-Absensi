@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/cek-masuk/{user_id}', [AbsensiController::class, 'cekAbsenMasuk']);
             Route::get('/cek-pulang/{user_id}', [AbsensiController::class, 'cekAbsenPulang']);
         });
-        Route::prefix("/laporan")->group(function() {
+        Route::prefix("/laporan")->group(function () {
             Route::post("/create", [LaporanController::class, 'store']);
             Route::post("/update/{id}", [LaporanController::class, 'update']);
             Route::get("/show", [LaporanController::class, 'index']);
@@ -41,6 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('/admin')->group(function () {
             Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');
             Route::get('/count-user', [AdminController::class, 'CountUser']);
+
+            // User CRUD
+            Route::get('/users', [AdminController::class, 'index']);
+            Route::post('/users', [AdminController::class, 'store']);
+            Route::get('/users/{id}', [AdminController::class, 'show']);
+            Route::post('/users/{id}', [AdminController::class, 'update']);
+            Route::delete('/users/{id}', [AdminController::class, 'destroy']);
         });
         Route::prefix('/log')->group(function () {
             Route::get('/user/{user_id}', [LogController::class, 'logUser']);
