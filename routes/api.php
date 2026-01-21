@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/count-user', [AdminController::class, 'CountUser']);
 
             // User CRUD
+            Route::post('/users/batch-create', [AdminController::class, 'batchStore']);
             Route::get('/users', [AdminController::class, 'index']);
             Route::post('/users', [AdminController::class, 'store']);
             Route::get('/users/{id}', [AdminController::class, 'show']);

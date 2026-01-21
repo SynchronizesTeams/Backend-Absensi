@@ -173,4 +173,83 @@ class AdminController extends Controller
             'message' => 'User deleted successfully'
         ]);
     }
+
+    public function batchStore(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getPathname(), 'r');
+
+        if (!$handle) {
+            return response()->json(['status' => 'error', 'message' => 'Could not open file'], 500);
+        }
+
+        $header = fgetcsv($handle);
+
+        if (!$header) {
+            fclose($handle);
+            return response()->json(['status' => 'error', 'message' => 'File is empty or invalid CSV'], 400);
+        }
+
+        // Normalize headers
+        $header = array_map(function ($h) {
+            return trim(strtolower($h));
+        }, $header);
+
+        $successCount = 0;
+        $errors = [];
+        $rowNumber = 1; // Header is row 1
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNumber++;
+
+            if (count($header) !== count($row)) {
+                $errors[] = "Row $rowNumber: Column count mismatch";
+                continue;
+            }
+
+            $rowData = array_combine($header, $row);
+            $rowData = array_map('trim', $rowData);
+
+            $validator = \Illuminate\Support\Facades\Validator::make($rowData, [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|string|min:6',
+                'no_induk' => 'required|string|unique:users,no_induk',
+                'role' => 'required|string',
+                'telepon' => 'nullable|string',
+                'alamat' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                $errors[] = "Row $rowNumber: " . implode(', ', $validator->errors()->all());
+                continue;
+            }
+
+            try {
+                $rowData['password'] = Hash::make($rowData['password']);
+                $rowData['user_id'] = uniqid("user_");
+
+                // Set default null for optionals if not present in CSV (though array_combine ensures keys exist if header exists)
+                // But just in case we add logic for fields not in header? No, we rely on header matching.
+
+                User::create($rowData);
+                $successCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Row $rowNumber: " . $e->getMessage();
+            }
+        }
+
+        fclose($handle);
+        Cache::forget('user_count');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Batch process completed. Success: $successCount, Failed: " . count($errors),
+            'errors' => $errors
+        ]);
+    }
 }
