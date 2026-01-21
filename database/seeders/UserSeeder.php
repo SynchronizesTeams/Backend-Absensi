@@ -20,8 +20,13 @@ class UserSeeder extends Seeder
 
         if (($handle = fopen($path, 'r')) !== false) {
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-                // Asumsikan urutan kolom: name, email, password
-                DB::table('users')->insert([
+                // Skip if user with this email or no_induk already exists
+                if (User::where('email', $row[2])->orWhere('no_induk', $row[1])->exists()) {
+                    continue;
+                }
+
+                // Asumsikan urutan kolom: name, no_induk, email, password, role
+                User::create([
                     'user_id' => uniqid('user_'),
                     'name' => $row[0],
                     'no_induk' => $row[1],
