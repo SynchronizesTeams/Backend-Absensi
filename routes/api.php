@@ -20,8 +20,8 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('/v1')->group(function () {
         Route::prefix('/absen')->group(function () {
-            Route::post('/masuk', [AbsensiController::class, 'masuk']);
-            Route::post('/pulang', [AbsensiController::class, 'pulang']);
+            Route::post('/masuk', [AbsensiControllerV2::class, 'masuk']);
+            Route::post('/pulang', [AbsensiControllerV2::class, 'pulang']);
             Route::post('/izin', [AbsensiController::class, 'izin']);
             Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsensi']);
             Route::get('/see/{user_id}', [AbsensiController::class, 'getAbsensiByUserId']);
