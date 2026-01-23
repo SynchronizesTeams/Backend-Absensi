@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
         if (($handle = fopen($path, 'r')) !== false) {
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 // Find existing user by email or create a new instance
-                $user = User::firstOrNew(['email' => $row[2]]);
+                $user = User::firstOrNew(['no_induk' => $row[1]]);
 
                 // If it's a new user, assign a unique user_id
                 if (!$user->exists) {
