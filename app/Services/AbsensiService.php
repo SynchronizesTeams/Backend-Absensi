@@ -103,6 +103,7 @@ class AbsensiService
             'keterangan_masuk' => 'hadir',
             'predikat' => $predikat,
             'photo_masuk' => $path,
+            'ttd' => $request->input('ttd'),
         ]);
 
         Log::create([
