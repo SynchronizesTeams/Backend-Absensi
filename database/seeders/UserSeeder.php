@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
                 $user->no_induk = $row[1];
                 $user->password = Hash::make($row[3]);
                 $user->role = $row[4];
-
+                $user->email = $row[2];
                 $user->save();
             }
             fclose($handle);
