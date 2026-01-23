@@ -51,16 +51,26 @@ class AdminController extends Controller
 
 
 
-    // public function countUsersByRole($role)
-    // {
-    //     return Cache::remember("user_count_by_role_{$role}", now()->addHours(1), function () use ($role) {
-    //         $users = User::where('role', '=', $role)->count();
+    public function countUsersByRole($role)
+    {
+        return Cache::remember("user_count_by_role_{$role}", now()->addHours(1), function () use ($role) {
+            $users = User::where('role', '=', $role)->count();
 
-    //         return response()->json([
-    //             'users' => $users,
-    //         ]);
-    //     });
-    // }
+            return response()->json([
+                'users' => $users,
+            ]);
+        });
+    }
+
+    public function seeUserByRole($role)
+    {
+        $users = User::where('role', '=', $role)->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $users
+        ]);
+    }
     public function index()
     {
         $users = User::all();

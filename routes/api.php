@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Absensi\AbsensiController;
+use App\Http\Controllers\API\Absensi\V2\AbsensiControllerV2;
 use App\Http\Controllers\API\Admin\AdminController;
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Laporan\LaporanController;
@@ -41,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('/admin')->group(function () {
             Route::get('/export-absensi', [AdminController::class, 'export'])->name('export.absensi');
             Route::get('/count-user', [AdminController::class, 'CountUser']);
+            Route::get('/count-user/{role}', [AdminController::class, 'countUsersByRole']);
+            Route::get('/see-user/{role}', [AdminController::class, 'seeUserByRole']);
 
             // User CRUD
             Route::post('/users/batch-create', [AdminController::class, 'batchStore']);
@@ -63,7 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('v2')->group(function () {
         Route::prefix('/absen')->group(function () {
-            Route::post('/masuk', [AbsensiController::class, 'masukV2']);
+            Route::post('/masuk', [AbsensiControllerV2::class, 'masuk']);
+            Route::post('/pulang', [AbsensiControllerV2::class, 'pulang']);
         });
     });
 
