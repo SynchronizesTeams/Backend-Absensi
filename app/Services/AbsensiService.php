@@ -79,13 +79,23 @@ class AbsensiService
         $rule = $this->getRule($user, $now);
         $tanggal = $this->resolveTanggal($rule, $now);
 
-        $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $tanggal)
-            ->first();
+        // $absensi = Absensi::where('user_id', $user->user_id)
+        //     ->whereDate('tanggal', $tanggal)
+        //     ->first();
+        $query = Absensi::where('user_id', $user->user_id)
+                ->whereDate('tanggal', $tanggal);
 
-        if ($absensi) {
-            abort(403, 'Sudah absen masuk hari ini');
+        if ($user->role === 'satpam') {
+            $query->where('shift', $rule['shift']);
         }
+
+        if ($query->exists()) {
+            abort(403, 'Sudah absen masuk untuk shift ini');
+        }
+
+        // if ($absensi) {
+        //     abort(403, 'Sudah absen masuk hari ini');
+        // }
 
         $predikat = null;
         if (isset($rule['masuk_end'])) {
@@ -100,6 +110,7 @@ class AbsensiService
             'user_id' => $user->user_id,
             'tanggal' => $tanggal,
             'jam_masuk' => $now->format('H:i:s'),
+            'shift' => $rule['shift'] ?? null,
             'keterangan_masuk' => 'hadir',
             'predikat' => $predikat,
             'photo_masuk' => $path,
@@ -126,9 +137,15 @@ class AbsensiService
         $rule = $this->getRule($user, $now);
         $tanggal = $this->resolveTanggal($rule, $now);
 
-        $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $tanggal)
-            ->first();
+        $query = Absensi::where('user_id', $user->user_id)
+                 ->whereDate('tanggal', $tanggal);
+
+        if ($user->role === 'satpam') {
+            $query->where('shift', $rule['shift']);
+        }
+
+        $absensi = $query->first();
+
 
         if (!$absensi) {
             abort(403, 'Belum absen masuk');
