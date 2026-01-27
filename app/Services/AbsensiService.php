@@ -40,7 +40,7 @@ class AbsensiService
                 return [
                     'role' => 'satpam',
                     'shift' => 'malam',
-                    'masuk_start' => '17:00',
+                    'masuk_start' => '18:59',
                     'pulang_end' => '06:00',
                     'lintas_hari' => true,
                 ];
@@ -50,7 +50,7 @@ class AbsensiService
                 'role' => 'satpam',
                 'shift' => 'pagi',
                 'masuk_end' => '06:59',
-                'pulang_start' => '18:59',
+                'pulang_start' => '18:00',
                 'lintas_hari' => false,
             ];
         }
