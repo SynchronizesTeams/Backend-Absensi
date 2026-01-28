@@ -25,6 +25,15 @@ class AbsensiService
             ];
         }
 
+        if ($user->role === 'tata-usaha') {
+            return [
+                'role' => 'tata-usaha',
+                'masuk_end' => '07:15',
+                'pulang_start' => '17:00',
+                'lintas_hari' => false,
+            ];
+        }
+
         if ($user->role === 'ob') {
             return [
                 'role' => 'ob',
