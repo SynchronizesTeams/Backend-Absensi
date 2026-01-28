@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
 
                 // Ambil user berdasarkan no_induk
-                $user = User::firstOrNew(['no_induk' => $row[1]]);
+                $user = User::firstOrNew(['email' => $row[2]]);
 
                 // Jika user baru
                 if (!$user->exists) {
@@ -31,7 +31,7 @@ class UserSeeder extends Seeder
 
                 // Set data
                 $user->name  = $row[0];
-                $user->email = $row[2];
+                $user->no_induk = $row[1];
                 $user->role  = $row[4];
 
                 /**
