@@ -9,6 +9,31 @@ use Illuminate\Http\Request;
 
 class AbsensiService
 {
+    private const OFFICE_LATITUDE = -6.467017;
+    private const OFFICE_LONGITUDE = 106.864356;
+    private const MAX_DISTANCE_METERS = 100;
+
+    private function isWithinRadius($latitude, $longitude): bool
+    {
+        $earthRadius = 6371000; // Earth radius in meters
+
+        $latFrom = deg2rad(self::OFFICE_LATITUDE);
+        $lonFrom = deg2rad(self::OFFICE_LONGITUDE);
+        $latTo = deg2rad($latitude);
+        $lonTo = deg2rad($longitude);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos($latFrom) * cos($latTo) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        $distance = $earthRadius * $c;
+
+        return $distance <= self::MAX_DISTANCE_METERS;
+    }
     /* =========================
      * RULE ABSENSI PER ROLE
      * ========================= */
@@ -85,9 +110,17 @@ class AbsensiService
     public function masuk(Request $request, $user)
     {
         $now = Carbon::now();
+
+        // ===== VALIDASI LOKASI =====
+        if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
+            abort(403, 'Anda berada di luar area kantor');
+        }
+
+        // ===== RULE & TANGGAL =====
         $rule = $this->getRule($user, $now);
         $tanggal = $this->resolveTanggal($rule, $now);
 
+        // ===== CEK SUDAH ABSEN =====
         $absensi = Absensi::where('user_id', $user->user_id)
             ->whereDate('tanggal', $tanggal)
             ->first();
@@ -96,6 +129,7 @@ class AbsensiService
             abort(403, 'Sudah absen masuk hari ini');
         }
 
+        // ===== PREDIKAT =====
         $predikat = null;
         if (isset($rule['masuk_end'])) {
             $predikat = $now->format('H:i') <= $rule['masuk_end']
@@ -103,6 +137,7 @@ class AbsensiService
                 : 'Telat';
         }
 
+        // ===== SIMPAN FOTO =====
         $path = $request->file('photo_masuk')->store('absensi', 'public');
 
         $absen = Absensi::create([
@@ -113,6 +148,8 @@ class AbsensiService
             'predikat' => $predikat,
             'photo_masuk' => $path,
             'ttd' => $request->input('ttd'),
+            'latitude_masuk' => $request->latitude,
+            'longitude_masuk' => $request->longitude,
         ]);
 
         Log::create([
@@ -132,6 +169,13 @@ class AbsensiService
     public function pulang(Request $request, $user)
     {
         $now = Carbon::now();
+
+        // ===== VALIDASI LOKASI =====
+        if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
+            abort(403, 'Anda berada di luar area kantor');
+        }
+
+        // ===== RULE & TANGGAL =====
         $rule = $this->getRule($user, $now);
         $tanggal = $this->resolveTanggal($rule, $now);
 
@@ -147,24 +191,33 @@ class AbsensiService
             abort(403, 'Sudah absen pulang');
         }
 
+        // ===== VALIDASI WAKTU BERDASARKAN ROLE =====
+        if (isset($rule['pulang_start']) && $now->format('H:i') < $rule['pulang_start']) {
+            abort(403, 'Belum waktunya pulang');
+        }
+
+        // ===== KETERANGAN =====
         $keteranganPulang = 'normal';
 
-        if ($user->role === 'ob' && $now->format('H:i') > '18:59') {
+        if ($user->role === 'ob' && $now->format('H:i') >= '19:00') {
             $keteranganPulang = 'lembur';
         }
 
-        if ($user->role === 'satpam' && ($rule['shift'] ?? null) === 'malam') {
-            if ($now->format('H:i') > '06:00') {
+        if (($rule['shift'] ?? null) === 'malam') {
+            if ($now->format('H:i') > $rule['pulang_end']) {
                 abort(403, 'Waktu pulang shift malam sudah lewat');
             }
         }
 
+        // ===== SIMPAN FOTO =====
         $path = $request->file('photo_pulang')->store('absensi', 'public');
 
         $absensi->update([
             'jam_pulang' => $now->format('H:i:s'),
             'photo_keluar' => $path,
             'keterangan_pulang' => $keteranganPulang,
+            'latitude_pulang' => $request->latitude,
+            'longitude_pulang' => $request->longitude,
         ]);
 
         Log::create([
@@ -177,4 +230,5 @@ class AbsensiService
 
         return $absensi;
     }
+
 }
