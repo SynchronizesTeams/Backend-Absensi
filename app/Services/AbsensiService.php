@@ -45,7 +45,7 @@ class AbsensiService
             return [
                 'role' => 'guru',
                 'masuk_end' => '07:15',
-                'pulang_start' => '17:00',
+                'pulang_start' => '13:00',
                 'lintas_hari' => false,
             ];
         }
@@ -54,7 +54,7 @@ class AbsensiService
             return [
                 'role' => 'tata-usaha',
                 'masuk_end' => '07:15',
-                'pulang_start' => '17:00',
+                'pulang_start' => '13:00',
                 'lintas_hari' => false,
             ];
         }
