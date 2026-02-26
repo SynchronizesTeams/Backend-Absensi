@@ -271,7 +271,8 @@ class AbsensiController extends Controller
                 'jam_pulang',
                 'keterangan_masuk',
                 'keterangan_pulang',
-                'keterangan'
+                'keterangan',
+                'ttd'
             )->get();
         });
 
