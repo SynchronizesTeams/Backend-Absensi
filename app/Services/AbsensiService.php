@@ -34,6 +34,7 @@ class AbsensiService
 
         return $distance <= self::MAX_DISTANCE_METERS;
     }
+
     /* =========================
      * RULE ABSENSI PER ROLE
      * ========================= */
@@ -70,12 +71,12 @@ class AbsensiService
         }
 
         if ($user->role === 'satpam') {
-            if ($time >= '17:00' || $time <= '06:00') {
+            if ($now->format('H:i') >= '18:00' || $now->format('H:i') < '05:30') {
                 return [
                     'role' => 'satpam',
                     'shift' => 'malam',
-                    'masuk_start' => '18:59',
-                    'pulang_end' => '06:00',
+                    'masuk_start' => '18:00',
+                    'pulang_start' => '05:30',
                     'lintas_hari' => true,
                 ];
             }
@@ -83,7 +84,7 @@ class AbsensiService
             return [
                 'role' => 'satpam',
                 'shift' => 'pagi',
-                'masuk_end' => '06:59',
+                'masuk_start' => '05:30',
                 'pulang_start' => '18:00',
                 'lintas_hari' => false,
             ];
@@ -97,7 +98,8 @@ class AbsensiService
      * ========================= */
     public function resolveTanggal(array $rule, Carbon $now): string
     {
-        if ($rule['lintas_hari'] && $now->hour < 12) {
+        if (($rule['shift'] ?? null) === 'malam'
+            && $now->format('H:i') < $rule['pulang_start']) {
             return $now->copy()->subDay()->toDateString();
         }
 
@@ -111,13 +113,20 @@ class AbsensiService
     {
         $now = Carbon::now();
 
+        $rule = $this->getRule($user, $now);
+
         // ===== VALIDASI LOKASI =====
         if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
             abort(403, 'Anda berada di luar area kantor');
         }
 
+        if (isset($rule['masuk_start'])) {
+            if ($now->format('H:i') < $rule['masuk_start']) {
+                abort(403, 'Belum waktunya absen masuk');
+            }
+        }
+
         // ===== RULE & TANGGAL =====
-        $rule = $this->getRule($user, $now);
         $tanggal = $this->resolveTanggal($rule, $now);
 
         // ===== CEK SUDAH ABSEN =====
@@ -175,10 +184,13 @@ class AbsensiService
             abort(403, 'Anda berada di luar area kantor');
         }
 
-        // ===== RULE & TANGGAL =====
+        // ===== AMBIL RULE =====
         $rule = $this->getRule($user, $now);
+
+        // ===== RESOLVE TANGGAL =====
         $tanggal = $this->resolveTanggal($rule, $now);
 
+        // ===== CEK DATA ABSENSI =====
         $absensi = Absensi::where('user_id', $user->user_id)
             ->whereDate('tanggal', $tanggal)
             ->first();
@@ -191,25 +203,47 @@ class AbsensiService
             abort(403, 'Sudah absen pulang');
         }
 
-        // ===== VALIDASI WAKTU BERDASARKAN ROLE =====
-        if (isset($rule['pulang_start']) && $now->format('H:i') < $rule['pulang_start']) {
-            abort(403, 'Belum waktunya pulang');
-        }
+        $jamSekarang = $now->format('H:i');
 
-        // ===== KETERANGAN =====
-        $keteranganPulang = 'normal';
+        // =========================================================
+        // VALIDASI WAKTU BERDASARKAN ROLE & SHIFT
+        // =========================================================
 
-        if ($user->role === 'ob' && $now->format('H:i') >= '19:00') {
-            $keteranganPulang = 'lembur';
-        }
-
-        if (($rule['shift'] ?? null) === 'malam') {
-            if ($now->format('H:i') > $rule['pulang_end']) {
-                abort(403, 'Waktu pulang shift malam sudah lewat');
+        if ($user->role === 'satpam') {
+            if ($rule['shift'] === 'pagi') {
+                // Shift pagi: pulang minimal jam 18:00
+                if ($jamSekarang < $rule['pulang_start']) {
+                    abort(403, 'Belum waktunya pulang (shift pagi)');
+                }
+            } elseif ($rule['shift'] === 'malam') {
+                // Shift malam: hanya boleh pulang antara 00:00 - 05:30
+                if ($jamSekarang > $rule['pulang_start']) {
+                    abort(403, 'Belum waktunya pulang (shift malam)');
+                }
+            }
+        } else {
+            // Role selain satpam
+            if (isset($rule['pulang_start']) && $jamSekarang < $rule['pulang_start']) {
+                abort(403, 'Belum waktunya pulang');
             }
         }
 
-        // ===== SIMPAN FOTO =====
+        // =========================================================
+        // KETERANGAN PULANG
+        // =========================================================
+
+        $keteranganPulang = 'normal';
+
+        if ($user->role === 'ob' && isset($rule['lembur_start'])) {
+            if ($jamSekarang >= $rule['lembur_start']) {
+                $keteranganPulang = 'lembur';
+            }
+        }
+
+        // =========================================================
+        // SIMPAN FOTO
+        // =========================================================
+
         $path = $request->file('photo_pulang')->store('absensi', 'public');
 
         $absensi->update([
@@ -219,6 +253,10 @@ class AbsensiService
             'latitude_pulang' => $request->latitude,
             'longitude_pulang' => $request->longitude,
         ]);
+
+        // =========================================================
+        // LOG
+        // =========================================================
 
         Log::create([
             'user_id' => $user->user_id,
@@ -230,5 +268,4 @@ class AbsensiService
 
         return $absensi;
     }
-
 }
