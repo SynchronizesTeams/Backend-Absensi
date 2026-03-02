@@ -76,7 +76,7 @@ class AbsensiService
                     'role' => 'satpam',
                     'shift' => 'malam',
                     'masuk_start' => '18:00',
-                    'pulang_start' => '05:30',
+                    'pulang_start' => '05:28',
                     'lintas_hari' => true,
                 ];
             }
@@ -85,7 +85,7 @@ class AbsensiService
                 'role' => 'satpam',
                 'shift' => 'pagi',
                 'masuk_start' => '05:30',
-                'pulang_start' => '18:00',
+                'pulang_start' => '17:58',
                 'lintas_hari' => false,
             ];
         }
