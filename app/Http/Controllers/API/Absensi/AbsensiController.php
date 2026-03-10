@@ -259,22 +259,19 @@ class AbsensiController extends Controller
 
     public function seeAbsensi($tanggal)
     {
-        $cacheKey = "absensi-{$tanggal}";
-        $absensi = Cache::remember($cacheKey, now()->addHours(1), function () use ($tanggal) {
-            return Absensi::whereDate('tanggal', '=',$tanggal)->with('user')->select(
-                'user_id',
-                'tanggal',
-                'photo_masuk',
-                'photo_izin',
-                'photo_keluar',
-                'jam_masuk',
-                'jam_pulang',
-                'keterangan_masuk',
-                'keterangan_pulang',
-                'keterangan',
-                'ttd'
-            )->get();
-        });
+        $absensi = Absensi::whereDate('tanggal', '=', $tanggal)->with('user')->select(
+            'user_id',
+            'tanggal',
+            'photo_masuk',
+            'photo_izin',
+            'photo_keluar',
+            'jam_masuk',
+            'jam_pulang',
+            'keterangan_masuk',
+            'keterangan_pulang',
+            'keterangan',
+            'ttd'
+        )->get();
 
         if ($absensi->isEmpty()) {
             return response()->json(['message' => 'Tidak ada data absensi untuk tanggal tersebut'], 404);
