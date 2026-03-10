@@ -64,7 +64,7 @@ class AbsensiService
             return [
                 'role' => 'ob',
                 'masuk_end' => '06:59',
-                'pulang_start' => '18:59',
+                'pulang_start' => '13:00',
                 'lembur_start' => '19:00',
                 'lintas_hari' => false,
             ];
