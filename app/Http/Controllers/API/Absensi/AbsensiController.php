@@ -263,7 +263,6 @@ class AbsensiController extends Controller
         $absensi = Cache::remember($cacheKey, now()->addHours(1), function () use ($tanggal) {
             return Absensi::whereDate('tanggal', '=',$tanggal)->with('user')->select(
                 'user_id',
-                'name',
                 'tanggal',
                 'photo_masuk',
                 'photo_izin',
