@@ -260,6 +260,7 @@ class AbsensiController extends Controller
     public function seeAbsensi($tanggal)
     {
         $absensi = Absensi::whereDate('tanggal', '=', $tanggal)->with('user')->select(
+    'id',
             'user_id',
             'tanggal',
             'photo_masuk',
