@@ -98,8 +98,10 @@ class AbsensiService
      * ========================= */
     public function resolveTanggal(array $rule, Carbon $now): string
     {
-        if (($rule['shift'] ?? null) === 'malam'
-            && $now->format('H:i') < $rule['pulang_start']) {
+        if (
+            ($rule['shift'] ?? null) === 'malam'
+            && $now->format('H:i') < '12:00'
+        ) {
             return $now->copy()->subDay()->toDateString();
         }
 
@@ -131,7 +133,7 @@ class AbsensiService
 
         // ===== CEK SUDAH ABSEN =====
         $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $tanggal)
+            ->whereDate('tgl_masuk', $tanggal)
             ->first();
 
         if ($absensi) {
@@ -151,14 +153,12 @@ class AbsensiService
 
         $absen = Absensi::create([
             'user_id' => $user->user_id,
-            'tanggal' => $tanggal,
+            'tgl_masuk' => $tanggal,
             'jam_masuk' => $now->format('H:i:s'),
             'keterangan_masuk' => 'hadir',
             'predikat' => $predikat,
             'photo_masuk' => $path,
             'ttd' => $request->input('ttd'),
-            'latitude_masuk' => $request->latitude,
-            'longitude_masuk' => $request->longitude,
         ]);
 
         Log::create([
@@ -192,7 +192,7 @@ class AbsensiService
 
         // ===== CEK DATA ABSENSI =====
         $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $tanggal)
+            ->whereDate('tgl_masuk', $tanggal)
             ->first();
 
         if (!$absensi) {
@@ -209,25 +209,27 @@ class AbsensiService
         // VALIDASI WAKTU BERDASARKAN ROLE & SHIFT
         // =========================================================
 
-        if ($user->role === 'satpam') {
-            if ($rule['shift'] === 'pagi') {
-                // Shift pagi: pulang minimal jam 18:00
-                if ($jamSekarang < $rule['pulang_start']) {
-                    abort(403, 'Belum waktunya pulang (shift pagi)');
-                }
-            } elseif ($rule['shift'] === 'malam') {
-                // Shift malam: hanya boleh pulang antara 00:00 - 05:30
-                if ($jamSekarang > $rule['pulang_start']) {
-                    abort(403, 'Belum waktunya pulang (shift malam)');
-                }
-            }
-        } else {
-            // Role selain satpam
-            if (isset($rule['pulang_start']) && $jamSekarang < $rule['pulang_start']) {
-                abort(403, 'Belum waktunya pulang');
-            }
+        // if ($user->role === 'satpam') {
+        //     if ($rule['shift'] === 'pagi') {
+        //         // Shift pagi: pulang minimal jam 18:00
+        //         if ($jamSekarang < $rule['pulang_start']) {
+        //             abort(403, 'Belum waktunya pulang (shift pagi)');
+        //         }
+        //     } elseif ($rule['shift'] === 'malam') {
+        //         // Shift malam: hanya boleh pulang antara 00:00 - 05:30
+        //         if ($jamSekarang > $rule['pulang_start']) {
+        //             abort(403, 'Belum waktunya pulang (shift malam)');
+        //         }
+        //     }
+        // } else {
+        //     // Role selain satpam
+        //     if (isset($rule['pulang_start']) && $jamSekarang < $rule['pulang_start']) {
+        //         abort(403, 'Belum waktunya pulang');
+        //     }
+        // }
+        if (isset($rule['pulang_start']) && $jamSekarang < $rule['pulang_start']) {
+            abort(403, 'Belum waktunya pulang');
         }
-
         // =========================================================
         // KETERANGAN PULANG
         // =========================================================
@@ -250,8 +252,7 @@ class AbsensiService
             'jam_pulang' => $now->format('H:i:s'),
             'photo_keluar' => $path,
             'keterangan_pulang' => $keteranganPulang,
-            'latitude_pulang' => $request->latitude,
-            'longitude_pulang' => $request->longitude,
+            'tgl_pulang' => $tanggal,
         ]);
 
         // =========================================================

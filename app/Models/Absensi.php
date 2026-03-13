@@ -11,14 +11,16 @@ class Absensi extends Model
         'photo_masuk',
         'photo_keluar',
         'photo_izin',
-        'latitude',
-        'longitude',
-        'tanggal',
+        'tgl_masuk',
+        'tgl_pulang',
         'jam_masuk',
         'jam_pulang',
         'keterangan_masuk',
         'keterangan_pulang',
         'keterangan',
+        'predikat',
+        'ttd',
+        'shift',
     ];
 
     public function user()
