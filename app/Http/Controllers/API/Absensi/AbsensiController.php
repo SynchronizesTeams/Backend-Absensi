@@ -26,7 +26,7 @@ class AbsensiController extends Controller
         $today = $now->toDateString();
 
         $absensi = Absensi::where('user_id', $user->id)
-            ->whereDate('tanggal', $today)
+            ->whereDate('tgl_masuk', $today)
             ->first();
 
         $request->validate([
@@ -55,7 +55,7 @@ class AbsensiController extends Controller
 
                 $absen = Absensi::create([
                     'user_id' => $user->user_id,
-                    'tanggal' => $today,
+                    'tgl_masuk' => $today,
                     'jam_masuk' => $now->format('H:i:s'),
                     'keterangan_masuk' => 'hadir', // default enum
                     'predikat' => $predikat,
@@ -101,7 +101,7 @@ class AbsensiController extends Controller
         ]);
 
         $alreadyAbsensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $today)
+            ->whereDate('tgl_masuk', $today)
             ->exists();
 
         if ($alreadyAbsensi) {
@@ -128,7 +128,7 @@ class AbsensiController extends Controller
 
         $absen = Absensi::create([
             'user_id' => $user->user_id,
-            'tanggal' => $today,
+            'tgl_masuk' => $today,
             'jam_masuk' => $now->format('H:i:s'),
             'keterangan_masuk' => 'hadir',
             'keterangan' => $predikat,
@@ -160,7 +160,7 @@ class AbsensiController extends Controller
         $today = $now->toDateString();
 
         $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $today)
+            ->whereDate('tgl_masuk', $today)
             ->first(); // pakai first(), bukan exists()
 
         $request->validate([
@@ -195,6 +195,7 @@ class AbsensiController extends Controller
                 'jam_pulang' => $currentTime,
                 'photo_keluar' => $path, // jangan lupa simpan path fotonya
                 'keterangan_pulang' => $keteranganPulang,
+                'tgl_pulang' => $today
             ]);
 
             Log::create([
@@ -226,7 +227,7 @@ class AbsensiController extends Controller
 
         // cari absensi user hari ini
         $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tanggal', $today)
+            ->whereDate('tgl_masuk', $today)
             ->first();
 
         // kalau sudah ada absensi hari ini dengan status izin
@@ -245,7 +246,7 @@ class AbsensiController extends Controller
         // buat absensi baru dengan status izin
         Absensi::create([
             'user_id' => $user->user_id,
-            'tanggal' => $today,
+            'tgl_masuk' => $today,
             'jam_masuk' => null,
             'jam_pulang' => null,
             'keterangan_masuk' => "izin",
@@ -259,10 +260,11 @@ class AbsensiController extends Controller
 
     public function seeAbsensi($tanggal)
     {
-        $absensi = Absensi::whereDate('tanggal', '=', $tanggal)->with('user')->select(
+        $absensi = Absensi::whereDate('tgl_masuk', '=', $tanggal)->with('user')->select(
     'id',
             'user_id',
-            'tanggal',
+            'tgl_masuk',
+            'tgl_pulang',
             'photo_masuk',
             'photo_izin',
             'photo_keluar',
@@ -309,8 +311,8 @@ class AbsensiController extends Controller
                     SUM(CASE WHEN keterangan_masuk = 'tidak hadir' THEN 1 ELSE 0 END) as total_tidak_hadir
                 ")
                 ->where('user_id', $user_id)
-                ->whereMonth('tanggal', $bulan)
-                ->whereYear('tanggal', $tahun)
+                ->whereMonth('tgl_masuk', $bulan)
+                ->whereYear('tgl_masuk', $tahun)
                 ->first();
 
         // Hitung total hari kerja dari tanggal 1 sampai hari ini (atau akhir bulan)
@@ -324,8 +326,8 @@ class AbsensiController extends Controller
 
         // Ambil semua tanggal yang user punya absensi
         $tanggalAbsensi = Absensi::where('user_id', $user_id)
-            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
-            ->pluck('tanggal')
+            ->whereBetween('tgl_masuk', [$start->toDateString(), $end->toDateString()])
+            ->pluck('tgl_masuk')
             ->toArray();
 
         // Hitung hari kerja (Senin–Sabtu)
@@ -364,7 +366,7 @@ class AbsensiController extends Controller
     public function cekAbsenMasuk($user_id)
     {
         $absensi = Absensi::where('user_id', $user_id)
-            ->whereDate('tanggal', Carbon::now()->toDateString())
+            ->whereDate('tgl_masuk', Carbon::now()->toDateString())
             ->where('keterangan_masuk', '=','hadir')
             ->first();
 
@@ -378,7 +380,7 @@ class AbsensiController extends Controller
     public function cekAbsenPulang($user_id)
     {
         $absensi = Absensi::where('user_id', $user_id)
-                    ->whereDate('tanggal', Carbon::now()->toDateString())
+                    ->whereDate('tgl_masuk', Carbon::now()->toDateString())
                     ->whereIn('keterangan_pulang', ['normal', 'lembur'])
                     ->first();
 
