@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Exports\AbsensiExport;
 use App\Exports\AbsensiMultiSheetExport;
 use App\Http\Controllers\Controller;
+use App\Models\Absensi;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -255,5 +256,27 @@ class AdminController extends Controller
             'message' => "Batch process completed. Success: $successCount, Failed: " . count($errors),
             'errors' => $errors
         ]);
+    }
+
+     public function updateAbsensi(Request $request, $id) {
+        $absensi = Absensi::findOrFail($id);
+
+        $request->validate([
+            'tgl_masuk' => 'nullable|date',
+            'tgl_pulang' => 'nullable|date',
+            'jam_masuk' => 'nullable|date_format:H:i:s',
+            'jam_pulang' => 'nullable|date_format:H:i:s',
+        ]);
+
+        $absensi->update($request->only('tgl_masuk', 'tgl_pulang', 'jam_masuk', 'jam_pulang'));
+
+        return response()->json(['message' => 'Absensi berhasil diperbarui']);
+    }
+
+    public function deleteAbsensi($id) {
+        $absensi = Absensi::findOrFail($id);
+        $absensi->delete();
+
+        return response()->json(['message' => 'Absensi berhasil dihapus']);
     }
 }

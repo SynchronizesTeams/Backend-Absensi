@@ -52,6 +52,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/users/{id}', [AdminController::class, 'show']);
             Route::post('/users/{id}', [AdminController::class, 'update']);
             Route::delete('/users/{id}', [AdminController::class, 'destroy']);
+
+            //Absensi CRUD
+            Route::put('/absensi/{id}', [AdminController::class, 'updateAbsensi']);
+            Route::delete('/absensi/{id}', [AdminController::class, 'deleteAbsensi']);
         });
         Route::prefix('/log')->group(function () {
             Route::get('/user/{user_id}', [LogController::class, 'logUser']);
