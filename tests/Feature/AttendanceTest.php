@@ -63,10 +63,10 @@ class AttendanceTest extends TestCase
     }
 
     /** @test */
-    public function teacher_check_in_late()
+    public function teacher_can_check_in_anytime()
     {
         $user = $this->createUser('guru');
-        Carbon::setTestNow('2026-03-12 08:00:00');
+        Carbon::setTestNow('2026-03-12 10:00:00');
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/absen/masuk', [
@@ -78,7 +78,7 @@ class AttendanceTest extends TestCase
         $response->assertStatus(200);
         $this->assertDatabaseHas('absensis', [
             'user_id' => $user->user_id,
-            'predikat' => 'Telat',
+            'predikat' => 'Tepat Waktu',
             'tgl_masuk' => '2026-03-12',
         ]);
     }
@@ -246,5 +246,82 @@ class AttendanceTest extends TestCase
         $record = Absensi::where('user_id', $user->user_id)->where('tgl_masuk', '2026-03-12')->first();
         $this->assertNotNull($record->jam_pulang);
         $this->assertEquals('2026-03-12', $record->tgl_pulang); // Based on resolveTanggal logic
+    }
+
+    /** @test */
+    public function teacher_can_check_out_anytime()
+    {
+        $user = $this->createUser('guru');
+
+        Absensi::create([
+            'user_id' => $user->user_id,
+            'tgl_masuk' => '2026-03-12',
+            'jam_masuk' => '07:00:00',
+            'keterangan_masuk' => 'hadir',
+            'photo_masuk' => 'absensi/masuk.jpg',
+        ]);
+
+        Carbon::setTestNow('2026-03-12 10:00:00');
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/absen/pulang', [
+                'photo_pulang' => UploadedFile::fake()->create('pulang.jpg', 100),
+                'latitude' => self::OFFICE_LAT,
+                'longitude' => self::OFFICE_LNG,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Absen pulang berhasil');
+
+        $this->assertDatabaseHas('absensis', [
+            'user_id' => $user->user_id,
+            'tgl_pulang' => '2026-03-12',
+            'keterangan_pulang' => 'normal',
+        ]);
+    }
+
+    /** @test */
+    public function can_check_attendance_status()
+    {
+        $user = $this->createUser('guru');
+        Carbon::setTestNow('2026-03-12 12:00:00');
+
+        // Check before clock-in
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/absen/cek-masuk/{$user->user_id}");
+        $response->assertStatus(401);
+
+        // Clock-in
+        Absensi::create([
+            'user_id' => $user->user_id,
+            'tgl_masuk' => '2026-03-12',
+            'jam_masuk' => '07:00:00',
+            'keterangan_masuk' => 'hadir',
+            'photo_masuk' => 'absensi/masuk.jpg',
+        ]);
+
+        // Check after clock-in
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/absen/cek-masuk/{$user->user_id}");
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Anda sudah melakukan absen masuk hari ini');
+
+        // Check before clock-out
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/absen/cek-pulang/{$user->user_id}");
+        $response->assertStatus(401);
+
+        // Clock-out
+        $absen = Absensi::where('user_id', $user->user_id)->first();
+        $absen->update([
+            'jam_pulang' => '10:00:00',
+            'keterangan_pulang' => 'normal',
+            'tgl_pulang' => '2026-03-12',
+        ]);
+
+        // Check after clock-out
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/absen/cek-pulang/{$user->user_id}");
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Anda sudah melakukan absen pulang hari ini');
     }
 }

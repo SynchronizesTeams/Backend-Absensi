@@ -23,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/masuk', [AbsensiControllerV2::class, 'masuk']);
             Route::post('/pulang', [AbsensiControllerV2::class, 'pulang']);
             Route::post('/izin', [AbsensiController::class, 'izin']);
-            Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsensi']);
+            Route::get('/cek/{tanggal}', [AbsensiController::class, 'seeAbsepnsi']);
             Route::get('/see/{user_id}', [AbsensiController::class, 'getAbsensiByUserId']);
             Route::get('/recap/{user_id}', [AbsensiController::class, 'recapAbsensi']);
 

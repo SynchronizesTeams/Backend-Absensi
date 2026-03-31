@@ -45,8 +45,8 @@ class AbsensiService
         if ($user->role === 'guru') {
             return [
                 'role' => 'guru',
-                'masuk_end' => '07:15',
-                'pulang_start' => '13:00',
+                'masuk_end' => '23:59',
+                'pulang_start' => '00:00',
                 'lintas_hari' => false,
             ];
         }
