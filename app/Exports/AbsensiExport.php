@@ -24,15 +24,15 @@ class AbsensiExport implements FromCollection, WithHeadings
         $query = Absensi::with('user');
 
         if ($this->from && $this->to) {
-            $query->whereBetween('tanggal', [$this->from, $this->to]);
+            $query->whereBetween('tgl_masuk', [$this->from, $this->to]);
         } elseif ($this->from) {
-            $query->whereDate('tanggal', $this->from);
+            $query->whereDate('tgl_masuk', $this->from);
         }
 
         return $query->get()->map(function ($item) {
             return [
                 'Nama User'        => $item->user ? $item->user->name : '-',
-                'Tanggal'          => $item->tanggal,
+                'Tanggal'          => $item->tgl_masuk,
                 'Jam Masuk'        => $item->jam_masuk,
                 'Jam Pulang'       => $item->jam_pulang,
                 'Keterangan Masuk' => $item->keterangan_masuk,
