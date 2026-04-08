@@ -159,6 +159,7 @@ class AbsensiService
             'predikat' => $predikat,
             'photo_masuk' => $path,
             'ttd' => $request->input('ttd'),
+            'keterangan' => $request->input('keterangan'),
         ]);
 
         Log::create([
