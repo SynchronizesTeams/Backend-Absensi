@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 
 class AbsensiControllerV2 extends Controller
 {
-    public function __construct(private AbsensiService $absensiService) {}
+    public function __construct(private AbsensiService $absensiService)
+    {
+    }
 
     public function masuk(Request $request)
     {
@@ -16,6 +18,7 @@ class AbsensiControllerV2 extends Controller
             'photo_masuk' => 'required|image|max:10240',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'ttd' => 'nullable|string',
         ]);
 
         $absen = $this->absensiService->masuk($request, auth()->user());

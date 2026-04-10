@@ -33,6 +33,7 @@ class AbsensiController extends Controller
             'photo_masuk' => 'required|image|max:10240',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'ttd' => 'nullable|string',
         ]);
 
         $schoolLat = -6.467017;
@@ -61,8 +62,7 @@ class AbsensiController extends Controller
                     'predikat' => $predikat,
                     'keterangan' => null,
                     'photo_masuk' => $path,
-                    // 'latitude' => $request->latitude,
-                    // 'longitude' => $request->longitude,
+                    'ttd' => $request->input('ttd'),
                 ]);
 
                 $log = Log::create([
@@ -88,7 +88,8 @@ class AbsensiController extends Controller
         ])->setStatusCode(403, 'Forbidden');
     }
 
-    public function masukV2(Request $request) {
+    public function masukV2(Request $request)
+    {
         $user = auth()->user();
         $now = now();
         $currentTime = $now->format('H:i');
@@ -98,6 +99,7 @@ class AbsensiController extends Controller
             'photo_masuk' => 'required|image|max:10240|mimes:png,jpg,jpeg,bmp,gif,svg,webp,tiff,ico,avif',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'ttd' => 'nullable|string',
         ]);
 
         $alreadyAbsensi = Absensi::where('user_id', $user->user_id)
@@ -133,6 +135,7 @@ class AbsensiController extends Controller
             'keterangan_masuk' => 'hadir',
             'keterangan' => $predikat,
             'photo_masuk' => $path,
+            'ttd' => $request->input('ttd'),
         ]);
 
         Log::create([
@@ -223,6 +226,7 @@ class AbsensiController extends Controller
         $request->validate([
             'keterangan' => 'required|string',
             'photo_izin' => 'required|image|max:10240',
+            'ttd' => 'nullable|string',
         ]);
 
         // cari absensi user hari ini
@@ -253,6 +257,7 @@ class AbsensiController extends Controller
             'keterangan_pulang' => null,
             'photo_izin' => $path,
             'keterangan' => $request->keterangan,
+            'ttd' => $request->input('ttd'),
         ]);
 
         return response()->json(['message' => "Absen izin berhasil"], 200);
@@ -310,17 +315,17 @@ class AbsensiController extends Controller
                     SUM(CASE WHEN keterangan_masuk = 'cuti' THEN 1 ELSE 0 END) as total_cuti,
                     SUM(CASE WHEN keterangan_masuk = 'tidak hadir' THEN 1 ELSE 0 END) as total_tidak_hadir
                 ")
-                ->where('user_id', $user_id)
-                ->whereMonth('tgl_masuk', $bulan)
-                ->whereYear('tgl_masuk', $tahun)
-                ->first();
+            ->where('user_id', $user_id)
+            ->whereMonth('tgl_masuk', $bulan)
+            ->whereYear('tgl_masuk', $tahun)
+            ->first();
 
         // Hitung total hari kerja dari tanggal 1 sampai hari ini (atau akhir bulan)
         $now = Carbon::now();
         $start = Carbon::create($tahun, $bulan, 1);
         $end = ($bulan == $now->month && $tahun == $now->year)
             ? $now // kalau bulan ini, cukup sampai hari ini
-            : $start->copy()->endOfMonth();
+             : $start->copy()->endOfMonth();
 
         $period = CarbonPeriod::create($start, $end);
 
@@ -357,8 +362,8 @@ class AbsensiController extends Controller
             ],
             'rekap' => $rekap,
             'pesan' => $totalTidakAbsen > 0
-                ? "Anda belum absen sebanyak $totalTidakAbsen hari dalam periode ini."
-                : "Absensi lengkap, pertahankan!"
+            ? "Anda belum absen sebanyak $totalTidakAbsen hari dalam periode ini."
+            : "Absensi lengkap, pertahankan!"
         ]);
     }
 
@@ -367,7 +372,7 @@ class AbsensiController extends Controller
     {
         $absensi = Absensi::where('user_id', $user_id)
             ->whereDate('tgl_masuk', Carbon::now()->toDateString())
-            ->where('keterangan_masuk', '=','hadir')
+            ->where('keterangan_masuk', '=', 'hadir')
             ->first();
 
         if ($absensi) {
@@ -380,9 +385,9 @@ class AbsensiController extends Controller
     public function cekAbsenPulang($user_id)
     {
         $absensi = Absensi::where('user_id', $user_id)
-                    ->whereDate('tgl_masuk', Carbon::now()->toDateString())
-                    ->whereIn('keterangan_pulang', ['normal', 'lembur'])
-                    ->first();
+            ->whereDate('tgl_masuk', Carbon::now()->toDateString())
+            ->whereIn('keterangan_pulang', ['normal', 'lembur'])
+            ->first();
 
         if ($absensi) {
             return response()->json(['message' => 'Anda sudah melakukan absen pulang hari ini']);
@@ -398,10 +403,10 @@ class AbsensiController extends Controller
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
 
-        $a = sin($dLat/2) * sin($dLat/2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon/2) * sin($dLon/2);
-        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
         $distance = $earthRadius * $c;
 
         return $distance <= $radius;

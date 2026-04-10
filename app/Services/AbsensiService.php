@@ -99,8 +99,8 @@ class AbsensiService
     public function resolveTanggal(array $rule, Carbon $now): string
     {
         if (
-            ($rule['shift'] ?? null) === 'malam'
-            && $now->format('H:i') < '12:00'
+        ($rule['shift'] ?? null) === 'malam'
+        && $now->format('H:i') < '12:00'
         ) {
             return $now->copy()->subDay()->toDateString();
         }
