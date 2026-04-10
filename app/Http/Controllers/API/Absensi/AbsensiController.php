@@ -370,12 +370,37 @@ class AbsensiController extends Controller
 
     public function cekAbsenMasuk($user_id)
     {
-        $absensi = Absensi::where('user_id', $user_id)
-            ->whereDate('tgl_masuk', Carbon::now()->toDateString())
-            ->where('keterangan_masuk', '=', 'hadir')
-            ->first();
+        $user = User::where('user_id', $user_id)->first();
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
 
-        if ($absensi) {
+        $now = Carbon::now();
+        $today = $now->toDateString();
+        $yesterday = $now->copy()->subDay()->toDateString();
+
+        // 1. Cek apakah ada sesi aktif (belum pulang) hari ini atau kemarin (untuk satpam)
+        $sessionAktif = Absensi::where('user_id', $user_id)
+            ->whereNull('jam_pulang')
+            ->where(function ($query) use ($today, $yesterday, $user) {
+                $query->whereDate('tgl_masuk', $today);
+                if ($user->role === 'satpam') {
+                    $query->orWhereDate('tgl_masuk', $yesterday);
+                }
+            })
+            ->exists();
+
+        if ($sessionAktif) {
+            return response()->json(['message' => 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)'], 403);
+        }
+
+        // 2. Cek apakah sudah absen masuk hari ini
+        $sudahAbsen = Absensi::where('user_id', $user_id)
+            ->whereDate('tgl_masuk', $today)
+            ->where('keterangan_masuk', '=', 'hadir')
+            ->exists();
+
+        if ($sudahAbsen) {
             return response()->json(['message' => 'Anda sudah melakukan absen masuk hari ini']);
         }
 
@@ -384,16 +409,41 @@ class AbsensiController extends Controller
 
     public function cekAbsenPulang($user_id)
     {
-        $absensi = Absensi::where('user_id', $user_id)
-            ->whereDate('tgl_masuk', Carbon::now()->toDateString())
-            ->whereIn('keterangan_pulang', ['normal', 'lembur'])
+        $user = User::where('user_id', $user_id)->first();
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+
+        $now = Carbon::now();
+        $today = $now->toDateString();
+        $yesterday = $now->copy()->subDay()->toDateString();
+
+        // Cari sesi aktif yang bisa dipulangkan
+        $sessionAktif = Absensi::where('user_id', $user_id)
+            ->whereNull('jam_pulang')
+            ->where(function ($query) use ($today, $yesterday, $user) {
+                $query->whereDate('tgl_masuk', $today);
+                if ($user->role === 'satpam') {
+                    $query->orWhereDate('tgl_masuk', $yesterday);
+                }
+            })
             ->first();
 
-        if ($absensi) {
+        if ($sessionAktif) {
+            return response()->json(['message' => 'Anda belum melakukan absen pulang']);
+        }
+
+        // Cek apakah sudah pulang hari ini
+        $sudahPulang = Absensi::where('user_id', $user_id)
+            ->whereDate('tgl_masuk', $today)
+            ->whereNotNull('jam_pulang')
+            ->exists();
+
+        if ($sudahPulang) {
             return response()->json(['message' => 'Anda sudah melakukan absen pulang hari ini']);
         }
 
-        return response()->json(['message' => 'Anda belum melakukan absen pulang hari ini'], 401);
+        return response()->json(['message' => 'Anda belum melakukan absen masuk hari ini'], 401);
     }
 
     private function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius)
