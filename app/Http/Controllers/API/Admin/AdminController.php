@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Exports\AbsensiExport;
+use App\Exports\AbsensiMonthlyRecapExport;
 use App\Exports\AbsensiMultiSheetExport;
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
@@ -23,6 +24,17 @@ class AdminController extends Controller
                 $request->to
             ),
             'absensi.xlsx'
+        );
+    }
+
+    public function exportSummary(Request $request)
+    {
+        $bulan = $request->input('bulan', now()->month);
+        $tahun = $request->input('tahun', now()->year);
+
+        return Excel::download(
+            new AbsensiMonthlyRecapExport($bulan, $tahun),
+            "rekap-absensi-{$bulan}-{$tahun}.xlsx"
         );
     }
 
