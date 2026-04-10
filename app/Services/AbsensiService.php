@@ -47,7 +47,6 @@ class AbsensiService
                 'role' => 'guru',
                 'masuk_end' => '23:59',
                 'pulang_start' => '00:00',
-                'lintas_hari' => false,
             ];
         }
 
@@ -56,7 +55,6 @@ class AbsensiService
                 'role' => 'tata-usaha',
                 'masuk_end' => '07:15',
                 'pulang_start' => '13:00',
-                'lintas_hari' => false,
             ];
         }
 
@@ -66,47 +64,21 @@ class AbsensiService
                 'masuk_end' => '06:59',
                 'pulang_start' => '13:00',
                 'lembur_start' => '19:00',
-                'lintas_hari' => false,
             ];
         }
 
         if ($user->role === 'satpam') {
-            if ($now->format('H:i') >= '18:00' || $now->format('H:i') < '05:30') {
-                return [
-                    'role' => 'satpam',
-                    'shift' => 'malam',
-                    'masuk_start' => '18:00',
-                    'pulang_start' => '05:28',
-                    'lintas_hari' => true,
-                ];
-            }
-
             return [
                 'role' => 'satpam',
-                'shift' => 'pagi',
-                'masuk_start' => '05:30',
-                'pulang_start' => '17:58',
-                'lintas_hari' => false,
+                'masuk_start' => '00:00', // Satpam bisa masuk kapan saja sesuai pergantian
+                'pulang_start' => '00:00',
             ];
         }
 
         abort(403, 'Role tidak dikenali');
     }
 
-    /* =========================
-     * TANGGAL ABSENSI
-     * ========================= */
-    public function resolveTanggal(array $rule, Carbon $now): string
-    {
-        if (
-        ($rule['shift'] ?? null) === 'malam'
-        && $now->format('H:i') < '12:00'
-        ) {
-            return $now->copy()->subDay()->toDateString();
-        }
 
-        return $now->toDateString();
-    }
 
     /* =========================
      * ABSEN MASUK
@@ -128,15 +100,25 @@ class AbsensiService
             }
         }
 
-        // ===== RULE & TANGGAL =====
-        $tanggal = $this->resolveTanggal($rule, $now);
+        // ===== TANGGAL =====
+        $tanggal = $now->toDateString();
 
         // ===== CEK SUDAH ABSEN =====
-        $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tgl_masuk', $tanggal)
+        // Cari absensi yang belum pulang (aktif)
+        $absensiAktif = Absensi::where('user_id', $user->user_id)
+            ->whereNull('jam_pulang')
             ->first();
 
-        if ($absensi) {
+        if ($absensiAktif) {
+            abort(403, 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)');
+        }
+
+        // Cek apakah sudah absen masuk hari ini (untuk yang bukan shift malam/cross-day)
+        $sudahAbsenHariIni = Absensi::where('user_id', $user->user_id)
+            ->whereDate('tgl_masuk', $tanggal)
+            ->exists();
+
+        if ($sudahAbsenHariIni) {
             abort(403, 'Sudah absen masuk hari ini');
         }
 
@@ -188,16 +170,26 @@ class AbsensiService
         // ===== AMBIL RULE =====
         $rule = $this->getRule($user, $now);
 
-        // ===== RESOLVE TANGGAL =====
-        $tanggal = $this->resolveTanggal($rule, $now);
-
         // ===== CEK DATA ABSENSI =====
+        $today = $now->toDateString();
+        $yesterday = $now->copy()->subDay()->toDateString();
+
+        // 1. Cari absensi hari ini yang belum pulang
         $absensi = Absensi::where('user_id', $user->user_id)
-            ->whereDate('tgl_masuk', $tanggal)
+            ->whereDate('tgl_masuk', $today)
+            ->whereNull('jam_pulang')
             ->first();
 
+        // 2. Jika tidak ada dan role satpam, cari absensi kemarin yang belum pulang
+        if (!$absensi && $user->role === 'satpam') {
+            $absensi = Absensi::where('user_id', $user->user_id)
+                ->whereDate('tgl_masuk', $yesterday)
+                ->whereNull('jam_pulang')
+                ->first();
+        }
+
         if (!$absensi) {
-            abort(403, 'Belum absen masuk');
+            abort(403, 'Belum absen masuk' . ($user->role === 'satpam' ? ' hari ini atau kemarin' : ''));
         }
 
         if ($absensi->jam_pulang) {
@@ -253,7 +245,7 @@ class AbsensiService
             'jam_pulang' => $now->format('H:i:s'),
             'photo_keluar' => $path,
             'keterangan_pulang' => $keteranganPulang,
-            'tgl_pulang' => $tanggal,
+            'tgl_pulang' => $today,
         ]);
 
         // =========================================================
