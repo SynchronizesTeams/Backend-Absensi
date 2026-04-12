@@ -20,4 +20,5 @@ jobs:
           script: |
             cd /www/wwwroot/Backend-Absensi
             git pull origin main
+            php artisan migrate --force
             php artisan optimize
