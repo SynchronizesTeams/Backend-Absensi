@@ -109,9 +109,9 @@ class AbsensiService
             ->whereNull('jam_pulang')
             ->first();
 
-        if ($absensiAktif) {
-            abort(403, 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)');
-        }
+        // if ($absensiAktif) {
+        //     abort(403, 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)');
+        // }
 
         // Cek apakah sudah absen masuk hari ini (untuk yang bukan shift malam/cross-day)
         $sudahAbsenHariIni = Absensi::where('user_id', $user->user_id)
