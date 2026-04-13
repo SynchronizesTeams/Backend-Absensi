@@ -390,9 +390,9 @@ class AbsensiController extends Controller
             })
             ->exists();
 
-        if ($sessionAktif) {
-            return response()->json(['message' => 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)'], 403);
-        }
+        // if ($sessionAktif) {
+        //     return response()->json(['message' => 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)'], 403);
+        // }
 
         // 2. Cek apakah sudah absen masuk hari ini
         $sudahAbsen = Absensi::where('user_id', $user_id)
