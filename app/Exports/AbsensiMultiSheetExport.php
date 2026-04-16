@@ -20,6 +20,7 @@ class AbsensiMultiSheetExport implements WithMultipleSheets
             new AbsensiPerRoleSheet('satpam', $this->from, $this->to),
             new AbsensiPerRoleSheet('ob', $this->from, $this->to),
             new AbsensiPerRoleSheet('tata-usaha', $this->from, $this->to),
+            new AbsensiTidakHadirSheet($this->from, $this->to),
         ];
     }
 }
