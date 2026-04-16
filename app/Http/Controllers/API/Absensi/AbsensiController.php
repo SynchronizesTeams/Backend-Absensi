@@ -248,7 +248,7 @@ class AbsensiController extends Controller
         $path = $request->file('photo_izin')->store('absensi', 'public');
 
         // buat absensi baru dengan status izin
-        Absensi::create([
+        $absen = Absensi::create([
             'user_id' => $user->user_id,
             'tgl_masuk' => $today,
             'jam_masuk' => null,
@@ -258,6 +258,14 @@ class AbsensiController extends Controller
             'photo_izin' => $path,
             'keterangan' => $request->keterangan,
             'ttd' => $request->input('ttd'),
+        ]);
+
+        Log::create([
+            'user_id' => $user->user_id,
+            'absensi_id' => $absen->id,
+            'status' => 'izin',
+            'is_success' => true,
+            'time' => $now->format('H:i:s'),
         ]);
 
         return response()->json(['message' => "Absen izin berhasil"], 200);
@@ -372,7 +380,7 @@ class AbsensiController extends Controller
     {
         $user = User::where('user_id', $user_id)->first();
         if (!$user) {
-            return response()->json(['message' => 'User tidak ditemukan'], 404);
+            return response()->json(['status' => false, 'message' => 'User tidak ditemukan'], 404);
         }
 
         $now = Carbon::now();
@@ -391,7 +399,7 @@ class AbsensiController extends Controller
             ->exists();
 
         // if ($sessionAktif) {
-        //     return response()->json(['message' => 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)'], 403);
+        //     return response()->json(['status' => false, 'message' => 'Anda masih memiliki sesi absensi yang belum ditutup (belum absen pulang)'], 403);
         // }
 
         // 2. Cek apakah sudah absen masuk hari ini
@@ -401,17 +409,17 @@ class AbsensiController extends Controller
             ->exists();
 
         if ($sudahAbsen) {
-            return response()->json(['message' => 'Anda sudah melakukan absen masuk hari ini']);
+            return response()->json(['status' => true, 'message' => 'Anda sudah melakukan absen masuk hari ini']);
         }
 
-        return response()->json(['message' => 'Anda belum melakukan absen masuk hari ini'], 401);
+        return response()->json(['status' => false, 'message' => 'Anda belum melakukan absen masuk hari ini'], 401);
     }
 
     public function cekAbsenPulang($user_id)
     {
         $user = User::where('user_id', $user_id)->first();
         if (!$user) {
-            return response()->json(['message' => 'User tidak ditemukan'], 404);
+            return response()->json(['status' => false, 'message' => 'User tidak ditemukan'], 404);
         }
 
         $now = Carbon::now();
@@ -430,7 +438,7 @@ class AbsensiController extends Controller
             ->first();
 
         if ($sessionAktif) {
-            return response()->json(['message' => 'Anda belum melakukan absen pulang']);
+            return response()->json(['status' => false, 'message' => 'Anda belum melakukan absen pulang']);
         }
 
         // Cek apakah sudah pulang hari ini
@@ -440,10 +448,32 @@ class AbsensiController extends Controller
             ->exists();
 
         if ($sudahPulang) {
-            return response()->json(['message' => 'Anda sudah melakukan absen pulang hari ini']);
+            return response()->json(['status' => true, 'message' => 'Anda sudah melakukan absen pulang hari ini']);
         }
 
-        return response()->json(['message' => 'Anda belum melakukan absen masuk hari ini'], 401);
+        return response()->json(['status' => false, 'message' => 'Anda belum melakukan absen masuk hari ini'], 401);
+    }
+
+    public function cekAbsenIzin($user_id)
+    {
+        $user = User::where('user_id', $user_id)->first();
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'User tidak ditemukan'], 404);
+        }
+
+        $now = Carbon::now();
+        $today = $now->toDateString();
+
+        $absensiIzin = Absensi::where('user_id', $user_id)
+            ->whereDate('tgl_masuk', $today)
+            ->where('keterangan_masuk', 'izin')
+            ->exists();
+
+        if ($absensiIzin) {
+            return response()->json(['status' => true, 'message' => 'Anda sudah melakukan izin hari ini']);
+        }
+
+        return response()->json(['status' => false, 'message' => 'Anda belum melakukan izin hari ini'], 401);
     }
 
     private function isWithinRadius($lat1, $lon1, $lat2, $lon2, $radius)
