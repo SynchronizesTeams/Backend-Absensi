@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('/cek-masuk/{user_id}', [AbsensiController::class, 'cekAbsenMasuk']);
             Route::get('/cek-pulang/{user_id}', [AbsensiController::class, 'cekAbsenPulang']);
+            Route::get('/cek-izin/{user_id}', [AbsensiController::class, 'cekAbsenIzin']);
         });
         Route::prefix("/laporan")->group(function () {
             Route::post("/create", [LaporanController::class, 'store']);
