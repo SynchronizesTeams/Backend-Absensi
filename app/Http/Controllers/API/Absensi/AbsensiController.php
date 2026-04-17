@@ -438,7 +438,7 @@ class AbsensiController extends Controller
             ->first();
 
         if ($sessionAktif) {
-            return response()->json(['status' => false, 'message' => 'Anda belum melakukan absen pulang']);
+            return response()->json(['status' => false, 'message' => 'Anda belum melakukan absen pulang'], 401);
         }
 
         // Cek apakah sudah pulang hari ini
