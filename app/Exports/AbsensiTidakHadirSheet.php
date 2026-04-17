@@ -20,24 +20,50 @@ class AbsensiTidakHadirSheet implements FromCollection, WithHeadings, WithTitle
 
     public function collection()
     {
-        $query = Absensi::with('user')
-            ->where('keterangan_masuk', '!=', 'hadir');
-            
-        if ($this->from && $this->to) {
-            $query->whereBetween('tgl_masuk', [$this->from, $this->to]);
-        } elseif ($this->from) {
-            $query->whereDate('tgl_masuk', $this->from);
+        $start = $this->from ? \Carbon\Carbon::parse($this->from) : \Carbon\Carbon::today();
+        $end = $this->to ? \Carbon\Carbon::parse($this->to) : (\Carbon\Carbon::today());
+
+        $absensisQuery = Absensi::whereBetween('tgl_masuk', [$start->toDateString(), $end->toDateString()])->get();
+        
+        $users = \App\Models\User::whereIn('role', ['guru', 'satpam', 'ob', 'tata-usaha'])->get();
+        $period = \Carbon\CarbonPeriod::create($start, $end);
+        $records = [];
+
+        foreach ($period as $date) {
+            $dateString = $date->toDateString();
+
+            // Opsional: Jika hari Minggu libur, tidak usah dicek
+            if ($date->isSunday()) {
+                continue;
+            }
+
+            foreach ($users as $user) {
+                // Cocokkan user_id ke tabel absensi
+                $absensi = $absensisQuery->where('user_id', $user->user_id ?? $user->id)->where('tgl_masuk', $dateString)->first();
+
+                if (!$absensi) {
+                    // Tidak ada record sama sekali
+                    $records[] = [
+                        'Nama User'         => $user->name ?? '-',
+                        'Role'              => ucfirst($user->role ?? '-'),
+                        'Tanggal'           => $dateString,
+                        'Status'            => 'Belum Absen (Alpa)',
+                        'Keterangan'        => '-',
+                    ];
+                } elseif (in_array(strtolower($absensi->keterangan_masuk), ['izin', 'sakit', 'cuti', 'tidak hadir'])) {
+                    // Ada record namun keterangan menunjukkan izin/sakit/dsb
+                    $records[] = [
+                        'Nama User'         => $user->name ?? '-',
+                        'Role'              => ucfirst($user->role ?? '-'),
+                        'Tanggal'           => $dateString,
+                        'Status'            => ucfirst($absensi->keterangan_masuk),
+                        'Keterangan'        => $absensi->keterangan ?? '-',
+                    ];
+                }
+            }
         }
 
-        return $query->get()->map(function ($item) {
-            return [
-                'Nama User'         => $item->user?->name ?? '-',
-                'Role'              => ucfirst($item->user?->role ?? '-'),
-                'Tanggal'           => $item->tgl_masuk,
-                'Keterangan Masuk'  => ucfirst($item->keterangan_masuk ?? '-'),
-                'Keterangan'        => $item->keterangan ?? '-',
-            ];
-        });
+        return collect($records);
     }
 
     public function headings(): array
